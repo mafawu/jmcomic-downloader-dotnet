@@ -38,3 +38,9 @@ plugin-list-hist/
 breeze.tar.gz
 jm-plugin.tar.gz
 
+# 本地配置/凭据（防止误提交）
+config.json
+*.local.json
+.env
+.env.*
+secrets.*
