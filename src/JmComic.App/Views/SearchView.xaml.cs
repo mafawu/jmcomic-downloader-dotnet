@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using JmComic.App.Controls;
 using JmComic.App.Common;
 using Microsoft.Extensions.DependencyInjection;
 using JmComic.App.Services;
@@ -17,7 +18,7 @@ namespace JmComic.App.Views;
 /// 聚合模式下并发查询所有免登录源，卡片带来源徽标；单源模式跳转详情携带 (sourceId, comicId)。
 /// 搜索结果按「源 + 页码」缓存：切 Tab 只筛选/补搜，不重复搜索已搜过的源。
 /// </summary>
-public partial class SearchView : UserControl
+public partial class SearchView : CardGridViewBase
 {
 
     private readonly SourceManager _sourceManager;

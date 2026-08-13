@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using JmComic.App.Controls;
 using JmComic.App.Dialogs;
 using JmComic.App.Services;
 using JmComic.App.ViewModels;
@@ -19,7 +20,7 @@ namespace JmComic.App.Views;
 /// 性能设计：后台线程一次性扫描全部目录（仅枚举目录，不统计图片文件），
 /// UI 分页渲染（默认每页 30 张，可调 20/30/40），分格大小可缩放。
 /// </summary>
-public partial class LocalView : UserControl
+public partial class LocalView : CardGridViewBase
 {
     private const int DefaultPageSize = 30;
 
@@ -49,75 +50,6 @@ public partial class LocalView : UserControl
         PageSizeBox.Items.Add(new ComboBoxItem { Content = "每页 30", Tag = "30", IsSelected = true });
         PageSizeBox.Items.Add(new ComboBoxItem { Content = "每页 40", Tag = "40" });
     }
-
-    /// <summary>分格系数（0.8~1.4）：决定卡片基准大小，窗口宽度变化时按比例自动缩放。</summary>
-    public static readonly DependencyProperty CellScaleProperty = DependencyProperty.Register(
-        nameof(CellScale), typeof(double), typeof(LocalView),
-        new PropertyMetadata(1.0, (d, _) => ((LocalView)d).OnCellScaleChanged()));
-
-    public double CellScale
-    {
-        get => (double)GetValue(CellScaleProperty);
-        set => SetValue(CellScaleProperty, value);
-    }
-
-    /// <summary>随分格系数与窗口宽度变化的网格槽位宽度（目标卡片宽 + 间距 14），用于计算列数。</summary>
-    public static readonly DependencyProperty SlotWidthProperty = DependencyProperty.Register(
-        nameof(SlotWidth), typeof(double), typeof(LocalView), new PropertyMetadata(182.0));
-
-    /// <summary>卡片实际宽度（槽位宽 - 14），供模板绑定，窗口/分格变化时精确缩放卡片。</summary>
-    public static readonly DependencyProperty CardWidthProperty = DependencyProperty.Register(
-        nameof(CardWidth), typeof(double), typeof(LocalView), new PropertyMetadata(168.0));
-
-    public double SlotWidth
-    {
-        get => (double)GetValue(SlotWidthProperty);
-        set => SetValue(SlotWidthProperty, value);
-    }
-
-    public double CardWidth
-    {
-        get => (double)GetValue(CardWidthProperty);
-        set => SetValue(CardWidthProperty, value);
-    }
-
-    /// <summary>基准可用宽度：在此宽度下，分格 100% 对应卡片宽 168px（1280 全屏时本地列表页的可用宽度）。</summary>
-    private const double ReferenceWidth = 930;
-
-    /// <summary>卡片宽度上下限，避免窗口极端大小时分格过大或过小。</summary>
-    private const double MinCardWidth = 90;
-    private const double MaxCardWidth = 340;
-
-    /// <summary>
-    /// 按窗口可用宽度更新卡片宽度与槽位宽度：卡片目标宽度 = 168 * 分格系数 * (可用宽度 / 基准宽度)，
-    /// 窗口变大卡片自动变大、变小卡片自动变小，滑块只调整基准系数。
-    /// </summary>
-    private void UpdateSlotWidth(double availableWidth)
-    {
-        if (availableWidth <= 0)
-        {
-            return;
-        }
-        var ratio = availableWidth / ReferenceWidth;
-        var cardWidth = Math.Clamp(168 * CellScale * ratio, MinCardWidth, MaxCardWidth);
-        CardWidth = cardWidth;
-        SlotWidth = cardWidth + 14;
-    }
-
-    private void OnCellScaleChanged()
-    {
-        UpdateSlotWidth(ActualWidth);
-        if (CellSizeText is not null)
-        {
-            CellSizeText.Text = $"{CellScale:P0}";
-        }
-    }
-
-    private void LocalView_SizeChanged(object sender, SizeChangedEventArgs e)
-        => UpdateSlotWidth(e.NewSize.Width);
-
-    private void CellSizeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        => CellScale = Math.Round(CellSizeSlider.Value, 2);
 
     /// <summary>切换到此页时调用：仅首次读取上次扫描的缓存（不扫描磁盘），之后保持已浏览状态；路径扫描只通过「刷新」按钮确认执行。</summary>
     public void OnShown()

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using JmComic.App.Common;
+using JmComic.App.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using JmComic.App.Services;
 using JmComic.App.ViewModels;
@@ -15,7 +16,7 @@ namespace JmComic.App.Views;
 /// 通用分类浏览页：面向任意实现 ICategorySource 的内容源（如绅士漫画）。
 /// 左侧分类列表（含子分类），右侧漫画卡片网格 + 分页。
 /// </summary>
-public partial class CategoryBrowseView : UserControl
+public partial class CategoryBrowseView : CardGridViewBase
 {
     private readonly SourceManager _sourceManager;
     private readonly ConfigService _config;

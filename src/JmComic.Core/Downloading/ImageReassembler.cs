@@ -28,13 +28,70 @@ public static class ImageReassembler
                 return;
             }
 
-        // 解码原图
+            using var srcImg = Image.Load<Rgba32>(imageData);
+            using var dstImg = ReassemblePixels(srcImg, blockNum);
+
+            // 按下载格式保存（先写临时文件）
+            switch (downloadFormat)
+            {
+                case DownloadFormat.Jpeg:
+                    dstImg.SaveAsJpeg(tmpPath);
+                    break;
+                case DownloadFormat.Png:
+                    // PNG 使用最高压缩质量，否则体积会很大
+                    var pngEncoder = new PngEncoder
+                    {
+                        CompressionLevel = PngCompressionLevel.BestCompression,
+                        ColorType = PngColorType.RgbWithAlpha,
+                    };
+                    dstImg.Save(tmpPath, pngEncoder);
+                    break;
+                case DownloadFormat.Webp:
+                    dstImg.Save(tmpPath, new WebpEncoder());
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(downloadFormat));
+            }
+
+            File.Move(tmpPath, savePath, true);
+        }
+        catch
+        {
+            TryDelete(tmpPath);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// 内存重组（在线阅读用）：把分块图片重组为完整图片字节，保持原始编码格式；未分块时原样返回。
+    /// </summary>
+    public static byte[] Reassemble(byte[] imageData, uint blockNum)
+    {
+        if (blockNum == 0)
+        {
+            return imageData;
+        }
+
         using var srcImg = Image.Load<Rgba32>(imageData);
+        var format = srcImg.Metadata.DecodedImageFormat;
+        if (format is null)
+        {
+            throw new InvalidOperationException("无法识别图片格式");
+        }
+        using var dstImg = ReassemblePixels(srcImg, blockNum);
+        using var ms = new MemoryStream();
+        dstImg.Save(ms, format);
+        return ms.ToArray();
+    }
+
+    /// <summary>把乱序分块的源图重组为完整图像（调用者负责释放返回的 Image）。</summary>
+    private static Image<Rgba32> ReassemblePixels(Image<Rgba32> srcImg, uint blockNum)
+    {
         var width = srcImg.Width;
         var height = srcImg.Height;
 
         // 创建目标图，尺寸与原图相同
-        using var dstImg = new Image<Rgba32>(width, height);
+        var dstImg = new Image<Rgba32>(width, height);
 
         // 计算原图高度除以 num 的余数
         var remainderHeight = (uint)(height % blockNum);
@@ -71,35 +128,7 @@ public static class ImageReassembler
             });
         }
 
-            // 按下载格式保存（先写临时文件）
-            switch (downloadFormat)
-            {
-                case DownloadFormat.Jpeg:
-                    dstImg.SaveAsJpeg(tmpPath);
-                    break;
-                case DownloadFormat.Png:
-                    // PNG 使用最高压缩质量，否则体积会很大
-                    var pngEncoder = new PngEncoder
-                    {
-                        CompressionLevel = PngCompressionLevel.BestCompression,
-                        ColorType = PngColorType.RgbWithAlpha,
-                    };
-                    dstImg.Save(tmpPath, pngEncoder);
-                    break;
-                case DownloadFormat.Webp:
-                    dstImg.Save(tmpPath, new WebpEncoder());
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(downloadFormat));
-            }
-
-            File.Move(tmpPath, savePath, true);
-        }
-        catch
-        {
-            TryDelete(tmpPath);
-            throw;
-        }
+        return dstImg;
     }
 
     private static void TryDelete(string path)

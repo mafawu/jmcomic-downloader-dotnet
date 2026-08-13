@@ -17,7 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace JmComic.App.Views;
 
 /// <summary>主题发现页：左侧主题分区（对应网站 /theme/ 页）+ 分类/标签搜索，点击后组合搜索。</summary>
-public partial class CategoryView : UserControl
+public partial class CategoryView : CardGridViewBase
 {
     private const int PageSize = 20;
 

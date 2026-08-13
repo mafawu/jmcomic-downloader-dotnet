@@ -33,6 +33,9 @@ public class ChapterCardViewModel : ObservableObject
     public string AlbumId { get; init; } = "";
     public string Title { get; init; } = "";
 
+    /// <summary>在线阅读命令（打开在线阅读器并跳到本章）。</summary>
+    public ICommand? ReadCommand { get; set; }
+
     private bool _isDownloaded;
     public bool IsDownloaded
     {
@@ -54,4 +57,3 @@ public class ChapterCardViewModel : ObservableObject
         set => SetProperty(ref _isSelected, value);
     }
 }
-

@@ -90,6 +90,7 @@ public class JmSource : IComicSource
                 Headers = new Dictionary<string, string>
                 {
                     ["User-Agent"] = JmConstants.UserAgent,
+                    ["Referer"] = $"https://{JmConstants.ApiDomain}/",
                 },
             });
         }

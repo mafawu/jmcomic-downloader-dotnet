@@ -49,6 +49,7 @@ public partial class MainWindow : Window
         PageHost.Content = _searchView;
 
         Navigation.OpenComicHandler = OpenComic;
+        Navigation.OpenOnlineReaderHandler = OpenOnlineReader;
         Navigation.OpenRankHandler = OpenRank;
         Navigation.OpenReaderHandler = OpenReader;
         Navigation.OpenLocalDetailHandler = OpenLocalDetail;
@@ -56,6 +57,12 @@ public partial class MainWindow : Window
         SearchPanelView.SearchChanged += (keyword, tags) => _localView?.ApplySearch(keyword, tags);
         Navigation.BackHandler = () =>
         {
+            if (PageHost.Content is OnlineReaderView)
+            {
+                // 在线阅读器返回：回到章节详情页
+                PageHost.Content = _lastPage;
+                return;
+            }
             if (ReferenceEquals(PageHost.Content, _localTabContent) && _localTabContent is ReaderView)
             {
                 // 阅读页返回：回到本地漫画列表（右侧恢复本地搜索工具）
@@ -196,6 +203,13 @@ public partial class MainWindow : Window
         _lastPage = _rankView;
         PageHost.Content = _rankView;
         _rankView.OnShown(period);
+    }
+
+    private void OpenOnlineReader(IComicSource source, IReadOnlyList<Chapter> chapters, int startIndex)
+    {
+        HideRightPanel();
+        _lastPage = (UserControl)PageHost.Content;
+        PageHost.Content = new OnlineReaderView(source, chapters, startIndex);
     }
 
     private void OpenReader(LocalComic comic)

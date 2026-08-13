@@ -204,6 +204,30 @@ public class JmHttpClientDomainRotationTests
             new[] { "a.example.com", "b.example.com", "b.example.com", "b.example.com" },
             handler.RequestedHosts);
     }
+    [Fact]
+    public async Task Retries_With_Fresh_Request_When_Network_Blips()
+    {
+        var handler = new FakeHandler();
+        var attempts = 0;
+        handler.OnRequest = request =>
+        {
+            attempts++;
+            if (attempts == 1)
+            {
+                // 模拟网络抖动：第一次发送直接失败，触发 Polly 重试
+                return Task.FromException<HttpResponseMessage>(new HttpRequestException("连接失败"));
+            }
+            return Task.FromResult(Ok(BuildSuccessBody(request, "{\"id\":123,\"name\":\"测试漫画\"}")));
+        };
+        var client = new JmHttpClient(ConfigWithDomains("a.example.com"), handler);
+
+        var album = await client.GetAlbumAsync(123);
+
+        Assert.Equal(123, album.Id);
+        // 修复前：重试复用同一个 HttpRequestMessage 会抛 "The request message was already sent."
+        Assert.True(attempts >= 2, $"期望至少重试 1 次，实际 {attempts} 次");
+    }
+
 }
 
 

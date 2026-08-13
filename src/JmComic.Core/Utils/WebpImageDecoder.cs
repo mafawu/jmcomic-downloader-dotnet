@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.Processing;
 namespace JmComic.Core.Utils;
 
 /// <summary>
-/// WebP 解码辅助：用 ImageSharp 解码本地 WebP 文件并缩放到目标宽度，
+/// WebP 解码辅助：用 ImageSharp 解码 WebP（本地文件或内存字节）并缩放到目标宽度，
 /// 输出 Bgra32 像素数据（供 WPF 构造 BitmapSource，无需 PNG/JPEG 转码中间步骤）。
 /// 用于系统 WIC 不支持 WebP 时的兜底路径。
 /// </summary>
@@ -15,10 +15,17 @@ public static class WebpImageDecoder
 
     /// <summary>解码 WebP 文件；宽超限时按比例缩放到 maxWidth。失败返回 null。</summary>
     public static DecodedImage? Decode(string path, int maxWidth)
+        => DecodeCore(() => Image.Load<Bgra32>(path), maxWidth);
+
+    /// <summary>解码 WebP 字节流（在线阅读内存链路）；宽超限时按比例缩放到 maxWidth。失败返回 null。</summary>
+    public static DecodedImage? Decode(byte[] bytes, int maxWidth)
+        => DecodeCore(() => Image.Load<Bgra32>(bytes), maxWidth);
+
+    private static DecodedImage? DecodeCore(Func<Image<Bgra32>> load, int maxWidth)
     {
         try
         {
-            using var image = Image.Load<Bgra32>(path);
+            using var image = load();
             if (image.Width > maxWidth)
             {
                 image.Mutate(x => x.Resize(new ResizeOptions
@@ -39,4 +46,3 @@ public static class WebpImageDecoder
         }
     }
 }
-

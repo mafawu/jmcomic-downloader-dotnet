@@ -20,7 +20,7 @@ namespace JmComic.App.Views;
 /// 列表中的漫画复用 AlbumCard（打开详情 / 一键下载），
 /// 并根据本地已下载漫画标记「已下载」徽章。
 /// </summary>
-public partial class WeeklyView : UserControl
+public partial class WeeklyView : CardGridViewBase
 {
     private readonly JmHttpClient _client;
     private readonly ConfigService _config;

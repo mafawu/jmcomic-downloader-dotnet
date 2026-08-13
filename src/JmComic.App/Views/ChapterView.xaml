@@ -30,6 +30,10 @@
                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                        MaxWidth="520" />
                         </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Button x:Name="ReadAllButton" Style="{StaticResource PrimaryButtonStyle}"
+                                    Content="在线阅读" Margin="0,0,8,0" IsEnabled="False"
+                                    Click="ReadAllButton_Click" />
                         <Button x:Name="FavoriteButton" Style="{StaticResource GhostButtonStyle}"
                                 HorizontalAlignment="Right" VerticalAlignment="Center"
                                 Click="FavoriteButton_Click">
@@ -39,6 +43,7 @@
                                 <TextBlock x:Name="FavoriteText" Text="收藏" Margin="6,0,0,0" />
                             </StackPanel>
                         </Button>
+                        </StackPanel>
                     </Grid>
                     <TextBlock x:Name="HeaderMeta" FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"
@@ -89,7 +94,7 @@
                                     <StackPanel Margin="12,0" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding Title}" FontSize="12.5"
                                                    FontWeight="SemiBold"
-                                                   MaxWidth="104"
+                                                    MaxWidth="72"
                                                    TextTrimming="CharacterEllipsis" />
                                         <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                             <Border Style="{StaticResource StatusBadgeStyle}"
@@ -109,6 +114,12 @@
                                             </Border>
                                         </StackPanel>
                                     </StackPanel>
+                                    <Button Style="{StaticResource IconButtonStyle}" Width="26" Height="34"
+                                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                                            Margin="0,0,4,0" ToolTip="在线阅读本章"
+                                            Command="{Binding ReadCommand}">
+                                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" />
+                                    </Button>
                                     <Border x:Name="SelectedCheck" Width="18" Height="18" CornerRadius="9"
                                             Background="{DynamicResource PrimaryBrush}"
                                             HorizontalAlignment="Right" VerticalAlignment="Top"

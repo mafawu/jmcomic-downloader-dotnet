@@ -1,5 +1,4 @@
-<UserControl x:Class="JmComic.App.Views.LocalView"
-             SizeChanged="LocalView_SizeChanged"
+<controls:CardGridViewBase x:Class="JmComic.App.Views.LocalView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:JmComic.App.Controls"
@@ -22,17 +21,9 @@
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <TextBlock Text="分格" FontSize="11"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           VerticalAlignment="Center" />
-                <Slider x:Name="CellSizeSlider" Width="90" Minimum="0.8" Maximum="1.4"
-                        Value="1.0" Margin="8,0,0,0" VerticalAlignment="Center"
-                        ValueChanged="CellSizeSlider_ValueChanged" />
-                <TextBlock x:Name="CellSizeText" Text="100%" FontSize="11"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="8,0,14,0" VerticalAlignment="Center"
-                           MinWidth="34" TextAlignment="Right" />
-                <Button Style="{StaticResource GhostButtonStyle}" Content="刷新"
+                <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=views:LocalView}}"
+                                         VerticalAlignment="Center" />
+                <Button Style="{StaticResource GhostButtonStyle}" Content="刷新" Margin="14,0,0,0"
                         Click="RefreshButton_Click" />
                 <Button Style="{StaticResource GhostButtonStyle}" Content="管理路径…"
                         Margin="8,0,0,0" Click="ManageDirsButton_Click" />
@@ -128,4 +119,4 @@
             </StackPanel>
         </Grid>
     </Grid>
-</UserControl>
+</controls:CardGridViewBase>

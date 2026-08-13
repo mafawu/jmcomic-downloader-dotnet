@@ -81,5 +81,33 @@ public class WebpDecoderTests
             Directory.Delete(dir, true);
         }
     }
-}
 
+    [Fact]
+    public void Decodes_Webp_Bytes_And_Resizes_To_MaxWidth()
+    {
+        using var image = new Image<Rgba32>(2000, 1000);
+        image.Mutate(x => x.BackgroundColor(Color.Red));
+        using var ms = new MemoryStream();
+        image.Save(ms, new WebpEncoder { FileFormat = WebpFileFormatType.Lossless });
+        var bytes = ms.ToArray();
+
+        var decoded = WebpImageDecoder.Decode(bytes, 800);
+
+        Assert.NotNull(decoded);
+        Assert.Equal(800, decoded!.Width);
+        Assert.Equal(400, decoded.Height);
+        Assert.Equal(800 * 400 * 4, decoded.BgraPixels.Length);
+        Assert.Equal(0, decoded.BgraPixels[0]);
+        Assert.Equal(0, decoded.BgraPixels[1]);
+        Assert.Equal(255, decoded.BgraPixels[2]);
+        Assert.Equal(255, decoded.BgraPixels[3]);
+    }
+
+    [Fact]
+    public void Returns_Null_For_Invalid_Bytes()
+    {
+        // magic 是 RIFF....WEBP 但内容损坏：解码应返回 null 而非抛异常
+        var bytes = new byte[] { 82, 73, 70, 70, 0, 0, 0, 0, 87, 69, 66, 80 };
+        Assert.Null(WebpImageDecoder.Decode(bytes, 800));
+    }
+}

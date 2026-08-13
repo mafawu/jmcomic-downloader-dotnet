@@ -1,8 +1,6 @@
-<UserControl x:Class="JmComic.App.Views.ReaderView"
+<UserControl x:Class="JmComic.App.Views.OnlineReaderView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             PreviewKeyDown="ReaderView_PreviewKeyDown">
-
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -45,13 +43,13 @@
             <DockPanel Grid.Row="1" Margin="0,8,0,0">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                     <ToggleButton x:Name="ScrollModeButton" Style="{StaticResource ReaderModeToggleStyle}"
-                                  Content="滚动" IsChecked="True" Click="ModeToggle_Click" />
+                                  Content="滚动" IsChecked="False" Click="ModeToggle_Click" />
                     <ToggleButton x:Name="PageModeButton" Style="{StaticResource ReaderModeToggleStyle}"
-                                  Content="翻页" Margin="4,0,0,0" Click="ModeToggle_Click" />
+                                  Content="翻页" Margin="4,0,0,0" IsChecked="True" Click="ModeToggle_Click" />
                     <TextBlock x:Name="ModeHintText" FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                VerticalAlignment="Center" Margin="12,0,0,0"
-                               Text="滚动浏览 · Ctrl + 滚轮缩放" />
+                               Text="翻页浏览 · ←/→ 或滚轮翻页 · Ctrl + 滚轮缩放" />
                     <Border Width="1" Height="18" Background="{DynamicResource DividerBrush}"
                             Margin="14,0,12,0" />
                     <Button x:Name="FitWidthButton" Style="{StaticResource GhostButtonStyle}"
@@ -68,13 +66,26 @@
 
         <!-- 阅读区 -->
         <Border Grid.Row="1" Background="{DynamicResource HoverBgBrush}" CornerRadius="12" Padding="8">
-            <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
-                          ScrollChanged="Scroller_ScrollChanged"
-                          SizeChanged="Scroller_SizeChanged"
-                          PreviewMouseWheel="Scroller_PreviewMouseWheel">
-                <StackPanel x:Name="ImageStack" HorizontalAlignment="Center" />
-            </ScrollViewer>
+            <Grid>
+                <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled"
+                              ScrollChanged="Scroller_ScrollChanged"
+                              SizeChanged="Scroller_SizeChanged"
+                              PreviewMouseWheel="Scroller_PreviewMouseWheel">
+                    <StackPanel x:Name="ImageStack" HorizontalAlignment="Center" />
+                </ScrollViewer>
+
+                <!-- 章节级加载/失败状态 -->
+                <StackPanel x:Name="ChapterStatePanel" Visibility="Collapsed"
+                            VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock x:Name="ChapterStateText" FontSize="14"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               Text="章节加载中…" Margin="20,12" HorizontalAlignment="Center" />
+                    <Button x:Name="ChapterRetryButton" Style="{StaticResource PrimaryButtonStyle}"
+                            Content="重试" Visibility="Collapsed" Click="ChapterRetryButton_Click"
+                            HorizontalAlignment="Center" Padding="18,8" />
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </UserControl>

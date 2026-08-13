@@ -16,7 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace JmComic.App.Views;
 
 /// <summary>排行页：按浏览量 / 最新 / 图片数 / 点赞浏览热门漫画（app API 不支持天/周/月周期）。</summary>
-public partial class RankView : UserControl
+public partial class RankView : CardGridViewBase
 {
     private const int PageSize = 20;
 

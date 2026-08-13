@@ -70,19 +70,23 @@ public partial class ChapterView : UserControl
             Chapters.Clear();
             _chapterMap.Clear();
             _cardMap.Clear();
+            var chapterIndex = 0;
             foreach (var chapter in detail.Chapters)
             {
+                var index = chapterIndex++;
                 var card = new ChapterCardViewModel
                 {
                     ChapterId = chapter.Id,
                     AlbumId = chapter.ComicId,
                     Title = chapter.Title,
+                    ReadCommand = new RelayCommand(_ => Navigation.OpenOnlineReader(_source, detail.Chapters, index)),
                 };
                 Chapters.Add(card);
                 _chapterMap[chapter.Id] = chapter;
                 _cardMap[chapter.Id] = card;
             }
             UpdateSelectedText();
+            ReadAllButton.IsEnabled = detail.Chapters.Count > 0;
         }
         catch (Exception ex)
         {
@@ -93,6 +97,15 @@ public partial class ChapterView : UserControl
         {
             LoadingPanel.Visibility = Visibility.Collapsed;
         }
+    }
+
+    private void ReadAllButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_detail is null || _detail.Chapters.Count == 0)
+        {
+            return;
+        }
+        Navigation.OpenOnlineReader(_source, _detail.Chapters, 0);
     }
 
     private static string BuildMetaText(ComicDetail detail)
@@ -218,6 +231,11 @@ public partial class ChapterView : UserControl
     private void ChapterCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (sender is not Border { DataContext: ChapterCardViewModel card })
+        {
+            return;
+        }
+        // 点击「在线阅读」按钮时不触发选择
+        if (e.OriginalSource is DependencyObject source && FindVisualParent<Button>(source, _ => true) is not null)
         {
             return;
         }

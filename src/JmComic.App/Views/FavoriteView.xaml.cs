@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using JmComic.App.Common;
+using JmComic.App.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using JmComic.App.Dialogs;
 using JmComic.App.Services;
@@ -15,7 +16,7 @@ using JmComic.Core.Sources.Jm;
 namespace JmComic.App.Views;
 
 /// <summary>收藏页：未登录时提示登录，登录后展示收藏漫画列表。</summary>
-public partial class FavoriteView : UserControl
+public partial class FavoriteView : CardGridViewBase
 {
     private const int PageSize = 20;
 

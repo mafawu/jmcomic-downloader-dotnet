@@ -48,6 +48,7 @@ public partial class App : Application
         services.AddSingleton<IComicSource>(sp => sp.GetRequiredService<HitomiSource>());
         services.AddSingleton<SourceManager>();
         services.AddSingleton<AggregateSearchService>();
+        services.AddSingleton<OnlineReaderService>();
 
         services.AddSingleton<DownloadManager>(sp => new DownloadManager(
             sp.GetServices<IComicSource>(), sp.GetRequiredService<ConfigService>()));

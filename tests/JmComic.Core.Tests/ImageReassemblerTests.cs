@@ -65,4 +65,30 @@ public class ImageReassemblerTests
             Directory.Delete(dir, true);
         }
     }
+
+    [Fact]
+    public void Reassemble_BlockNumZero_Returns_Original_Bytes()
+    {
+        var bytes = new byte[] { 9, 8, 7, 6 };
+
+        var result = ImageReassembler.Reassemble(bytes, 0);
+
+        Assert.Same(bytes, result);
+    }
+
+    [Fact]
+    public void Reassemble_BlockNumGreaterThanZero_Outputs_Complete_Image()
+    {
+        using var img = new Image<Rgba32>(6, 6);
+        img.Mutate(x => x.BackgroundColor(Color.Blue));
+        using var ms = new MemoryStream();
+        img.SaveAsPng(ms);
+        var srcBytes = ms.ToArray();
+
+        var result = ImageReassembler.Reassemble(srcBytes, 2);
+
+        using var loaded = Image.Load(result);
+        Assert.Equal(6, loaded.Width);
+        Assert.Equal(6, loaded.Height);
+    }
 }

@@ -127,18 +127,21 @@ public class JmHttpClient
                 url += "?" + qs;
             }
 
-            using var request = new HttpRequestMessage(method, url);
-            request.Headers.TryAddWithoutValidation("token", token);
-            request.Headers.TryAddWithoutValidation("tokenparam", tokenparam);
-            request.Headers.TryAddWithoutValidation("user-agent", JmConstants.UserAgent);
-
-            if (form is not null && form.Count > 0)
+            return await _pipeline.ExecuteAsync(async ct2 =>
             {
-                request.Content = new FormUrlEncodedContent(
-                    form.Select(kv => new KeyValuePair<string, string>(kv.Key, kv.Value?.ToString() ?? "")));
-            }
-
-            return await _pipeline.ExecuteAsync(async ct2 => await _client.SendAsync(request, ct2), ct);
+                using var request = new HttpRequestMessage(method, url);
+                request.Headers.TryAddWithoutValidation("token", token);
+                request.Headers.TryAddWithoutValidation("tokenparam", tokenparam);
+                request.Headers.TryAddWithoutValidation("user-agent", JmConstants.UserAgent);
+    
+                if (form is not null && form.Count > 0)
+                {
+                    request.Content = new FormUrlEncodedContent(
+                        form.Select(kv => new KeyValuePair<string, string>(kv.Key, kv.Value?.ToString() ?? "")));
+                }
+    
+                return await _client.SendAsync(request, ct2);
+            }, ct);
         }, ct);
     }
 
@@ -259,19 +262,22 @@ public class JmHttpClient
         var token = Md5Util.Hex($"{ts}{JmConstants.AppTokenSecret}");
         var tokenparam = $"{ts},{JmConstants.AppVersion}";
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"https://{domain}/login");
-        request.Headers.TryAddWithoutValidation("token", token);
-        request.Headers.TryAddWithoutValidation("tokenparam", tokenparam);
-        request.Headers.TryAddWithoutValidation("user-agent", JmConstants.UserAgent);
-        request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
-        {
-            ["username"] = config.Username,
-            ["password"] = config.Password,
-        });
-
         try
         {
-            using var response = await _pipeline.ExecuteAsync(async ct2 => await _client.SendAsync(request, ct2), ct);
+            using var response = await _pipeline.ExecuteAsync(async ct2 =>
+            {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"https://{domain}/login");
+            request.Headers.TryAddWithoutValidation("token", token);
+            request.Headers.TryAddWithoutValidation("tokenparam", tokenparam);
+            request.Headers.TryAddWithoutValidation("user-agent", JmConstants.UserAgent);
+            request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["username"] = config.Username,
+                ["password"] = config.Password,
+            });
+    
+                return await _client.SendAsync(request, ct2);
+            }, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             if (response.StatusCode == HttpStatusCode.OK && TryReadCode(body, out var code) && code == 200)
             {

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using JmComic.App.Common;
+using JmComic.App.Controls;
 using Microsoft.Extensions.DependencyInjection;
 using JmComic.App.Services;
 using JmComic.App.ViewModels;
@@ -15,7 +16,7 @@ namespace JmComic.App.Views;
 /// 通用排行浏览页：面向任意实现 IRankSource 的内容源（如绅士漫画收藏排行榜）。
 /// 顶部周期 Tab（今日/本週/本月/本年），下方卡片网格 + 分页。
 /// </summary>
-public partial class RankBrowseView : UserControl
+public partial class RankBrowseView : CardGridViewBase
 {
     private readonly SourceManager _sourceManager;
     private readonly ConfigService _config;
