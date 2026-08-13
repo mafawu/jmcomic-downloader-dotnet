@@ -1,0 +1,45 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 浅色主题 -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F6F7FB" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#E6E8F0" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#EDEFF5" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1E293B" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#64748B" />
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="#A6ADBB" />
+
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#6D5DF6" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#5A4BDE" />
+    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="#4A3CCF" />
+    <SolidColorBrush x:Key="PrimaryFgBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#8B5CF6" />
+
+    <SolidColorBrush x:Key="DangerBrush" Color="#EF4444" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#10B981" />
+    <SolidColorBrush x:Key="WarningBrush" Color="#F59E0B" />
+
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#D8DCE8" />
+    <SolidColorBrush x:Key="InputFocusBrush" Color="#6D5DF6" />
+    <SolidColorBrush x:Key="HoverBgBrush" Color="#0D64748B" />
+    <SolidColorBrush x:Key="ActiveNavBgBrush" Color="#1F6D5DF6" />
+    <SolidColorBrush x:Key="SelectionBgBrush" Color="#336D5DF6" />
+    <SolidColorBrush x:Key="ScrollbarThumbBrush" Color="#59A3A3B3" />
+    <SolidColorBrush x:Key="OverlayBrush" Color="#80000000" />
+    <SolidColorBrush x:Key="CardHoverShadowBrush" Color="#1F5046B4" />
+    <SolidColorBrush x:Key="SnackbarBgBrush" Color="#E61E293B" />
+
+
+    <!-- ===== v2 新增令牌 ===== -->
+    <SolidColorBrush x:Key="CardHoverBrush" Color="#F8F9FF" />
+    <SolidColorBrush x:Key="CardHoverBorderBrush" Color="#C9C3FB" />
+    <SolidColorBrush x:Key="PrimarySubtleBrush" Color="#F0EEFE" />
+    <SolidColorBrush x:Key="SkeletonBrush" Color="#E9EBF3" />
+    <SolidColorBrush x:Key="ScrollbarThumbHoverBrush" Color="#7A8094" />
+    <SolidColorBrush x:Key="WindowControlHoverBrush" Color="#0D000000" />
+    <SolidColorBrush x:Key="DividerStrongBrush" Color="#DFE3EE" />
+    <SolidColorBrush x:Key="TextLinkBrush" Color="#5A4BDE" />
+
+</ResourceDictionary>

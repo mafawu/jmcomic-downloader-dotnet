@@ -1,0 +1,40 @@
+# .NET
+bin/
+obj/
+publish/
+*.user
+
+# Rider / VS
+.vs/
+.idea/
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]uild/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Visual Studio cache
+*.csproj.user
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# 本地参考项目（第三方源码/压缩包，不上传）
+Breeze-main/
+Breeze-plugin-JmComic-main/
+plugin-list-hist/
+breeze.tar.gz
+jm-plugin.tar.gz
+

@@ -1,0 +1,82 @@
+<UserControl x:Class="JmComic.App.Controls.LocalComicCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:common="clr-namespace:JmComic.App.Common"
+             Margin="0,0,14,14"
+             SizeChanged="Card_SizeChanged">
+    <Border x:Name="Root" Style="{StaticResource CardHoverStyle}" CornerRadius="14"
+            Background="{DynamicResource SurfaceBrush}"
+            BorderBrush="{DynamicResource CardBorderBrush}"
+            BorderThickness="1"
+            Cursor="Hand"
+            MouseEnter="Root_MouseEnter"
+            MouseLeave="Root_MouseLeave"
+            MouseLeftButtonUp="Root_MouseLeftButtonUp">
+        <StackPanel>
+            <!-- 封面高度由代码按 166:222 宽高比随宽度自适应，保证任意窗口/分格大小下不变形 -->
+            <Border x:Name="CoverHost" CornerRadius="14,14,0,0" ClipToBounds="True">
+                <Grid>
+                    <Border Background="{DynamicResource HoverBgBrush}" />
+                    <Image common:ImageLoader.Source="{Binding CoverPath}"
+                           Stretch="UniformToFill" />
+                    <Border x:Name="Overlay" Background="{DynamicResource OverlayBrush}" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Button Style="{StaticResource PrimaryButtonStyle}"
+                                    Content="阅读"
+                                    Command="{Binding OpenReaderCommand}"
+                                    Padding="16,6" />
+                            <Button Style="{StaticResource GhostButtonStyle}"
+                                    Content="打开目录"
+                                    Margin="8,0,0,0"
+                                    Command="{Binding OpenFolderCommand}"
+                                    Padding="16,6" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+            <StackPanel Margin="12,10,12,12" MinHeight="64">
+                <TextBlock Text="{Binding Name}"
+                           FontSize="13" FontWeight="SemiBold"
+                           TextWrapping="Wrap" MaxHeight="38"
+                           TextTrimming="CharacterEllipsis" />
+                <TextBlock Text="{Binding NameCn}"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextWrapping="Wrap" MaxHeight="30"
+                           TextTrimming="CharacterEllipsis" Margin="0,2,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowNameCn}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <ItemsControl ItemsSource="{Binding DisplayTags}" Margin="0,6,0,0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource ActiveNavBgBrush}"
+                                    CornerRadius="5" Padding="6,2" Margin="0,0,4,4">
+                                <TextBlock Text="{Binding}" FontSize="10"
+                                           Foreground="{DynamicResource PrimaryBrush}" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{Binding StatsText}"
+                           FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,4,0,0"
+                           TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

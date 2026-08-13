@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JmComic.App/JmComic.App.csproj" />
+    <Project Path="src/JmComic.Core/JmComic.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JmComic.Core.Tests/JmComic.Core.Tests.csproj" />
+  </Folder>
+</Solution>

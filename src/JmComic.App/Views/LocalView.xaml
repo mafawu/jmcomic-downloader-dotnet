@@ -1,0 +1,131 @@
+<UserControl x:Class="JmComic.App.Views.LocalView"
+             SizeChanged="LocalView_SizeChanged"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:JmComic.App.Controls"
+             xmlns:views="clr-namespace:JmComic.App.Views">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 页头：标题 + 计数 + 右侧操作 -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="本地漫画" FontSize="18" FontWeight="Bold"
+                           VerticalAlignment="Center" />
+                <Border Style="{StaticResource CountBadgeStyle}" Margin="10,0,0,0">
+                    <TextBlock x:Name="LocalCount" FontSize="11"
+                               Foreground="{DynamicResource PrimaryBrush}" />
+                </Border>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <TextBlock Text="分格" FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           VerticalAlignment="Center" />
+                <Slider x:Name="CellSizeSlider" Width="90" Minimum="0.8" Maximum="1.4"
+                        Value="1.0" Margin="8,0,0,0" VerticalAlignment="Center"
+                        ValueChanged="CellSizeSlider_ValueChanged" />
+                <TextBlock x:Name="CellSizeText" Text="100%" FontSize="11"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="8,0,14,0" VerticalAlignment="Center"
+                           MinWidth="34" TextAlignment="Right" />
+                <Button Style="{StaticResource GhostButtonStyle}" Content="刷新"
+                        Click="RefreshButton_Click" />
+                <Button Style="{StaticResource GhostButtonStyle}" Content="管理路径…"
+                        Margin="8,0,0,0" Click="ManageDirsButton_Click" />
+                <Button Style="{StaticResource GhostButtonStyle}" Content="补全元数据"
+                        Margin="8,0,0,0" Click="BackfillButton_Click" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 内容区 -->
+        <Grid Grid.Row="1">
+            <StackPanel x:Name="NoDirsPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="Collapsed">
+                <Border Width="64" Height="64" CornerRadius="18"
+                        Background="{DynamicResource PrimarySubtleBrush}">
+                    <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="26"
+                               Foreground="{DynamicResource PrimaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="尚未配置本地目录" FontSize="15" FontWeight="SemiBold"
+                           Margin="0,16,0,0" HorizontalAlignment="Center" />
+                <TextBlock Text="添加下载目录后即可在本地模式浏览已下载的漫画" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,6,0,0" HorizontalAlignment="Center" />
+                <Button Content="添加本地路径" Style="{StaticResource PrimaryButtonStyle}"
+                        Margin="0,18,0,0" HorizontalAlignment="Center"
+                        Click="ManageDirsButton_Click" />
+            </StackPanel>
+
+            <StackPanel x:Name="LoadingPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="Collapsed">
+                <Border Width="64" Height="64" CornerRadius="18"
+                        Background="{DynamicResource HoverBgBrush}">
+                    <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="26"
+                               Foreground="{DynamicResource TextSecondaryBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="扫描中…" FontSize="15" FontWeight="SemiBold"
+                           Margin="0,16,0,0" HorizontalAlignment="Center" />
+                <TextBlock Text="正在扫描本地目录，稍候片刻" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,6,0,0" HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <StackPanel x:Name="EmptyPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
+                        Visibility="Collapsed">
+                <Border Width="64" Height="64" CornerRadius="18"
+                        Background="{DynamicResource HoverBgBrush}">
+                    <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="26"
+                               Foreground="{DynamicResource TextDisabledBrush}"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock x:Name="EmptyTitleText" Text="所选目录下还没有已下载的漫画" FontSize="15" FontWeight="SemiBold"
+                           Margin="0,16,0,0" HorizontalAlignment="Center" />
+                <TextBlock x:Name="EmptySubtitleText" Text="去搜索页下载漫画后即可在这里看到" FontSize="12"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="0,6,0,0" HorizontalAlignment="Center" />
+                <Button Style="{StaticResource PillGhostButtonStyle}" Content="重新扫描"
+                        Margin="0,18,0,0" HorizontalAlignment="Center"
+                        Click="RefreshButton_Click" />
+            </StackPanel>
+
+            <ScrollViewer x:Name="ResultScroller" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <ItemsControl x:Name="LocalItems" HorizontalContentAlignment="Stretch">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:AutoColumnsUniformGrid
+                                ItemSlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <controls:LocalComicCard HorizontalAlignment="Center"
+                                Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- 分页 -->
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button x:Name="PrevPageButton" Style="{StaticResource GhostButtonStyle}"
+                        Content="‹ 上一页" Click="PrevPage_Click" Padding="12,5" />
+                <TextBlock x:Name="PageText" FontSize="12" VerticalAlignment="Center"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Margin="14,0" MinWidth="76" TextAlignment="Center" />
+                <Button x:Name="NextPageButton" Style="{StaticResource GhostButtonStyle}"
+                        Content="下一页 ›" Click="NextPage_Click" Padding="12,5" />
+                <ComboBox x:Name="PageSizeBox" Width="84" Margin="16,0,0,0"
+                          VerticalAlignment="Center"
+                          SelectionChanged="PageSizeBox_SelectionChanged" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

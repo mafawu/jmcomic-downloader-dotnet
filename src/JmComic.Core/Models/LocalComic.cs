@@ -1,0 +1,57 @@
+using System.Text.Json.Serialization;
+
+namespace JmComic.Core.Models;
+
+/// <summary>本地漫画元数据（保存于专辑目录 album.json，供本地模式离线展示）。</summary>
+public class AlbumMetadata
+{
+    [JsonPropertyName("id")] public long Id { get; set; }
+    [JsonPropertyName("name")] public string Name { get; set; } = "";
+    [JsonPropertyName("nameCn")] public string NameCn { get; set; } = "";
+    [JsonPropertyName("tags")] public List<string> Tags { get; set; } = new();
+    [JsonPropertyName("author")] public List<string> Author { get; set; } = new();
+    [JsonPropertyName("works")] public List<string> Works { get; set; } = new();
+    [JsonPropertyName("actors")] public List<string> Actors { get; set; } = new();
+    [JsonPropertyName("description")] public string Description { get; set; } = "";
+    [JsonPropertyName("addtime")] public string Addtime { get; set; } = "";
+    [JsonPropertyName("total_views")] public string TotalViews { get; set; } = "";
+    [JsonPropertyName("likes")] public string Likes { get; set; } = "";
+    [JsonPropertyName("comment_total")] public string CommentTotal { get; set; } = "";
+    [JsonPropertyName("series_id")] public string SeriesId { get; set; } = "";
+    [JsonPropertyName("series")] public List<SeriesRespData> Series { get; set; } = new();
+    [JsonPropertyName("chapterInfos")] public List<ChapterInfo> ChapterInfos { get; set; } = new();
+    [JsonPropertyName("related_list")] public List<RelatedListRespData> RelatedList { get; set; } = new();
+    [JsonPropertyName("liked")] public bool Liked { get; set; }
+    [JsonPropertyName("is_favorite")] public bool IsFavorite { get; set; }
+    [JsonPropertyName("is_aids")] public bool IsAids { get; set; }
+}
+
+/// <summary>本地模式下扫描到的漫画（来自本地目录，可离线展示）。</summary>
+public class LocalComic
+{
+    public long? AlbumId { get; init; }
+    public string Name { get; init; } = "";
+    /// <summary>中文名：优先来自元数据，否则扫描时提取/翻译，用于搜索与展示。</summary>
+    public string NameCn { get; set; } = "";
+    public string Path { get; init; } = "";
+    public string CoverPath { get; init; } = "";
+    public List<string> Tags { get; init; } = new();
+    public List<string> Author { get; init; } = new();
+    public int ChapterCount { get; init; }
+    public long ImageCount { get; init; }
+    public DateTime ModifiedAt { get; init; }
+
+    /// <summary>元数据文件（album.json / 元数据.json）最后修改时间，用于增量扫描判断元数据是否变化。</summary>
+    public DateTime? MetadataStamp { get; init; }
+    public bool HasMetadata { get; init; }
+}
+
+/// <summary>本地漫画库磁盘缓存：按根目录分组保存扫描结果，供增量扫描复用。</summary>
+public class LocalLibraryCache
+{
+    /// <summary>缓存写入时间。</summary>
+    public DateTime SavedAt { get; set; }
+
+    /// <summary>根目录（绝对路径）→ 该目录下已扫描到的漫画列表。</summary>
+    public Dictionary<string, List<LocalComic>> Roots { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}

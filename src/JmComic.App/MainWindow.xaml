@@ -1,0 +1,189 @@
+<Window x:Class="JmComic.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:views="clr-namespace:JmComic.App.Views"
+        xmlns:controls="clr-namespace:JmComic.App.Controls"
+        Title="禁漫天堂下载器"
+        Width="1280" Height="800"
+        MinWidth="1024" MinHeight="680"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource AppBackgroundBrush}"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        StateChanged="Window_StateChanged">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="52"
+                      ResizeBorderThickness="6"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部应用栏 -->
+        <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
+                Padding="18,9,0,9">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 品牌 -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource PrimaryBrush}">
+                        <TextBlock Text="JM" Foreground="White" FontSize="13" FontWeight="Bold"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="JM 下载器" FontSize="14" FontWeight="Bold" />
+                        <TextBlock Text="禁漫天堂漫画下载" FontSize="10"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- 导航（分段容器：发现 / 我的 两组） -->
+                <Border Grid.Column="1" CornerRadius="8" Background="{DynamicResource HoverBgBrush}"
+                        Padding="2" Margin="28,0,0,0" VerticalAlignment="Center"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <StackPanel Orientation="Horizontal">
+                        <!-- 发现 -->
+                        <RadioButton x:Name="NavSearch" GroupName="Nav"
+                                     Style="{StaticResource NavItemStyle}" IsChecked="True"
+                                     Click="Nav_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                <TextBlock Text="搜索" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="NavRank" GroupName="Nav"
+                                     Style="{StaticResource NavItemStyle}"
+                                     Click="Nav_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                <TextBlock Text="排行" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="NavCategory" GroupName="Nav"
+                                     Style="{StaticResource NavItemStyle}"
+                                     Click="Nav_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                <TextBlock Text="分类" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="NavWeekly" GroupName="Nav"
+                                     Style="{StaticResource NavItemStyle}"
+                                     Click="Nav_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                <TextBlock Text="每周必看" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </RadioButton>
+                        <!-- 分隔 -->
+                        <Border Width="1" Height="20" Background="{DynamicResource DividerBrush}"
+                                Margin="6,0" VerticalAlignment="Center" />
+                        <!-- 我的 -->
+                        <RadioButton x:Name="NavLocal" GroupName="Nav"
+                                     Style="{StaticResource NavItemStyle}"
+                                     Click="Nav_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                <TextBlock Text="本地" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </RadioButton>
+                        <RadioButton x:Name="NavFavorite" GroupName="Nav"
+                                     Style="{StaticResource NavItemStyle}"
+                                     Click="Nav_Checked">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="&#xE734;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
+                                <TextBlock Text="收藏" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </RadioButton>
+                    </StackPanel>
+                </Border>
+
+                <!-- 操作区 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource IconButtonStyle}" ToolTip="设置"
+                            Click="Settings_Click">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                    <Button Style="{StaticResource IconButtonStyle}" ToolTip="打开配置目录" Margin="4,0,0,0"
+                            Click="OpenConfigDir_Click">
+                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                    <Button x:Name="ThemeButton" Style="{StaticResource IconButtonStyle}"
+                            ToolTip="切换深浅色主题" Margin="4,0,0,0"
+                            Click="ThemeToggle_Click">
+                        <TextBlock x:Name="ThemeIcon" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                    <Button x:Name="PanelToggleButton" Style="{StaticResource IconButtonStyle}"
+                            ToolTip="显示/隐藏侧栏" Margin="4,0,0,0"
+                            Click="PanelToggle_Click">
+                        <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                    <Border x:Name="LoginArea" Margin="14,0,0,0" />
+                </StackPanel>
+
+                <!-- 窗口控制：贴右上角，占满标题栏高度 -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Stretch"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Border Width="1" Height="18" Background="{DynamicResource DividerBrush}"
+                            VerticalAlignment="Center" Margin="10,0,8,0" />
+                    <Button x:Name="MinimizeButton" Style="{StaticResource WindowButtonStyle}"
+                            ToolTip="最小化" Click="MinimizeButton_Click">
+                        <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                    <Button x:Name="MaximizeButton" Style="{StaticResource WindowButtonStyle}"
+                            ToolTip="最大化" Click="MaximizeButton_Click">
+                        <TextBlock x:Name="MaximizeIcon" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                    <Button Style="{StaticResource WindowCloseButtonStyle}"
+                            ToolTip="关闭" Click="CloseButton_Click">
+                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 主体 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="PanelColumn" Width="344" MinWidth="300" MaxWidth="420" />
+            </Grid.ColumnDefinitions>
+
+            <ContentControl x:Name="PageHost" Grid.Column="0" />
+
+            <GridSplitter x:Name="PanelSplitter" Grid.Column="1" Width="5"
+                          HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                          Background="Transparent" ShowsPreview="True" />
+
+            <views:DownloadPanel x:Name="DownloadPanelView" Grid.Column="2" />
+            <views:ComicDetailPanel x:Name="DetailPanelView" Grid.Column="2" Visibility="Collapsed" />
+            <views:LocalSearchPanel x:Name="SearchPanelView" Grid.Column="2" Visibility="Collapsed" />
+            <views:LocalComicDetailPanel x:Name="LocalDetailPanelView" Grid.Column="2" Visibility="Collapsed" />
+
+            <controls:SnackbarHost x:Name="Snackbars" Grid.Column="0"
+                                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                   Margin="0,0,12,18" Panel.ZIndex="100" />
+        </Grid>
+
+    </Grid>
+</Window>
+
+
+
+
+
