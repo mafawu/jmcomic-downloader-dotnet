@@ -57,7 +57,8 @@
             <Grid>
                 <TextBox x:Name="KeywordBox" BorderThickness="0" Background="Transparent"
                          Padding="12,8" FontSize="12.5"
-                         TextChanged="KeywordBox_TextChanged" />
+                         TextChanged="KeywordBox_TextChanged"
+                         GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus" />
                 <TextBlock x:Name="PlaceholderText" Text="搜索漫画名 / 作者 / 标签"
                            FontSize="12" Foreground="{DynamicResource TextDisabledBrush}"
                            Margin="13,0,0,0" VerticalAlignment="Center"

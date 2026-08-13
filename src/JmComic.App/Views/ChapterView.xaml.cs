@@ -1,92 +1,93 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using JmComic.Core;
 using JmComic.App.Common;
 using Microsoft.Extensions.DependencyInjection;
 using JmComic.App.Services;
 using JmComic.App.ViewModels;
-using JmComic.Core;
 using JmComic.Core.Downloading;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
 using JmComic.Core.Services;
+using JmComic.Core.Sources;
+using JmComic.Core.Sources.Jm;
 
 namespace JmComic.App.Views;
 
 /// <summary>
-/// 绔犺妭璇︽儏椤碉細鏀寔榧犳爣妗嗛€?+ Ctrl 澶氶€?+ 鍙抽敭鑿滃崟鎵归噺涓嬭浇銆?
+/// 章节详情页：支持鼠标框选 + Ctrl 多选 + 右键菜单批量下载。
+/// 站点差异收敛到 IComicSource，页面只依赖通用 ComicDetail / Chapter 模型。
 /// </summary>
 public partial class ChapterView : UserControl
 {
-    private readonly JmHttpClient _client;
+    private readonly IComicSource _source;
     private readonly ConfigService _config;
     private readonly DownloadManager _downloadManager;
     private readonly SessionService _session;
 
-    private Album? _album;
-    private readonly Dictionary<long, ChapterInfo> _chapterMap = new();
-    private readonly Dictionary<long, ChapterCardViewModel> _cardMap = new();
+    private ComicDetail? _detail;
+    private bool _isFavorite;
+    private readonly Dictionary<string, Chapter> _chapterMap = new();
+    private readonly Dictionary<string, ChapterCardViewModel> _cardMap = new();
 
     private Point _dragStart;
     private bool _isDragging;
 
     public ObservableCollection<ChapterCardViewModel> Chapters { get; } = new();
 
-    public ChapterView(long albumId)
+    public ChapterView(IComicSource source, string comicId)
     {
         InitializeComponent();
-        _client = App.Services.GetRequiredService<JmHttpClient>();
+        _source = source;
         _config = App.Services.GetRequiredService<ConfigService>();
         _downloadManager = App.Services.GetRequiredService<DownloadManager>();
         _session = App.Services.GetRequiredService<SessionService>();
+        FavoriteButton.Visibility = source.Info.SupportsFavorites ? Visibility.Visible : Visibility.Collapsed;
+        ImageLoader.SetHeaders(CoverImage, source.Info.CoverHeaders);
         ChapterItems.ItemsSource = Chapters;
-        _ = LoadAsync(albumId);
+        _ = LoadAsync(comicId);
     }
 
-    private async Task LoadAsync(long albumId)
+    private async Task LoadAsync(string comicId)
     {
         LoadingPanel.Visibility = Visibility.Visible;
         try
         {
-            var resp = await _client.GetAlbumAsync(albumId);
-            _album = AlbumBuilder.Build(resp, _config.Current.DownloadDir);
-            if (_album is null)
-            {
-                throw new JmException("婕敾淇℃伅涓虹┖");
-            }
+            var detail = await _source.GetComicAsync(comicId);
+            _detail = detail;
 
-            HeaderTitle.Text = _album.Name;
-            HeaderMeta.Text = BuildMetaText(_album);
-            HeaderDesc.Text = string.IsNullOrWhiteSpace(_album.Description) ? "鏆傛棤绠€浠? : _album.Description;
-            ImageLoader.SetSource(CoverImage, $"https://{JmConstants.ImageDomain}/media/albums/{_album.Id}_3x4.jpg");
+            HeaderTitle.Text = detail.Title;
+            HeaderMeta.Text = BuildMetaText(detail);
+            HeaderDesc.Text = string.IsNullOrWhiteSpace(detail.Description) ? "暂无简介" : detail.Description;
+            ImageLoader.SetSource(CoverImage, detail.CoverUrl);
             UpdateFavoriteButton();
 
             Chapters.Clear();
             _chapterMap.Clear();
             _cardMap.Clear();
-            foreach (var chapter in _album.ChapterInfos)
+            foreach (var chapter in detail.Chapters)
             {
                 var card = new ChapterCardViewModel
                 {
-                    ChapterId = chapter.ChapterId,
-                    AlbumId = chapter.AlbumId,
-                    Title = chapter.ChapterTitle,
-                    IsDownloaded = chapter.IsDownloaded,
+                    ChapterId = chapter.Id,
+                    AlbumId = chapter.ComicId,
+                    Title = chapter.Title,
                 };
                 Chapters.Add(card);
-                _chapterMap[chapter.ChapterId] = chapter;
-                _cardMap[chapter.ChapterId] = card;
+                _chapterMap[chapter.Id] = chapter;
+                _cardMap[chapter.Id] = card;
             }
             UpdateSelectedText();
         }
         catch (Exception ex)
         {
             ToastService.ShowError(ex);
-            HeaderTitle.Text = "鍔犺浇澶辫触";
+            HeaderTitle.Text = "加载失败";
         }
         finally
         {
@@ -94,28 +95,24 @@ public partial class ChapterView : UserControl
         }
     }
 
-    private static string BuildMetaText(Album album)
+    private static string BuildMetaText(ComicDetail detail)
     {
         var parts = new List<string>
         {
-            $"鍏?{album.ChapterInfos.Count} 绔?,
+            $"共 {detail.Chapters.Count} 章",
         };
-        if (album.Author.Count > 0)
+        if (detail.Authors.Count > 0)
         {
-            parts.Add($"浣滆€咃細{string.Join("銆?, album.Author)}");
+            parts.Add($"作者：{string.Join("、", detail.Authors)}");
         }
-        if (!string.IsNullOrEmpty(album.TotalViews))
+        if (detail.Tags.Count > 0)
         {
-            parts.Add($"瑙傜湅锛歿album.TotalViews}");
+            parts.Add($"标签：{string.Join("、", detail.Tags.Take(6))}");
         }
-        if (!string.IsNullOrEmpty(album.Likes))
-        {
-            parts.Add($"鐐硅禐锛歿album.Likes}");
-        }
-        return string.Join(" 路 ", parts);
+        return string.Join(" · ", parts);
     }
 
-    // ====================== 妗嗛€?======================
+    // ====================== 框选 ======================
 
     private void ChaptersLayer_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -123,7 +120,7 @@ public partial class ChapterView : UserControl
         {
             return;
         }
-        // 鐐逛腑绔犺妭鍗＄墖鎴栨粴鍔ㄦ潯鏃朵笉鍚姩妗嗛€?
+        // 点中章节卡片或滚动条时不启动框选
         if (FindVisualParent<Border>(source, b => b.DataContext is ChapterCardViewModel) is not null ||
             FindVisualParent<ScrollBar>(source) is not null)
         {
@@ -156,7 +153,7 @@ public partial class ChapterView : UserControl
         Canvas.SetTop(SelectionRect, y);
         SelectionRect.Width = w;
         SelectionRect.Height = h;
-        // 蹇界暐杩囧皬鐨?鐐瑰嚮"锛堢偣鍑荤┖鐧藉锛夛紝閬垮厤璇竻绌哄綋鍓嶉€夋嫨
+        // 忽略过小的"点击"（点击空白处），避免误清空当前选择
         if (w < 4 && h < 4)
         {
             return;
@@ -179,23 +176,12 @@ public partial class ChapterView : UserControl
 
     private void ApplySelectionToCards(Rect selection)
     {
+        // 框选只追加选中，不清除已选章节；清空请使用页面上的"清空"按钮
         foreach (var card in Chapters)
         {
-            if (TryGetCardRect(card, out var cardRect))
+            if (TryGetCardRect(card, out var cardRect) && selection.IntersectsWith(cardRect))
             {
-                var hit = selection.IntersectsWith(cardRect);
-                if (hit)
-                {
-                    card.IsSelected = true;
-                }
-                else if (!_additive)
-                {
-                    card.IsSelected = false;
-                }
-            }
-            else if (!_additive)
-            {
-                card.IsSelected = false;
+                card.IsSelected = true;
             }
         }
     }
@@ -213,8 +199,8 @@ public partial class ChapterView : UserControl
         {
             return false;
         }
-        // SelectionCanvas 涓庣珷鑺傚垪琛ㄦ槸鍏勫紵鑺傜偣锛岀敤 TransformToVisual 璁＄畻鐩稿鍧愭爣锛?
-        // 绔犺妭鍒楄〃閲嶅缓/鍥炴敹鏃跺鍣ㄥ彲鑳藉凡鑴辩瑙嗚鏍戯紙姝ゆ椂浼氭姏寮傚父锛夛紝鎹曡幏鍚庤烦杩囪鍗＄墖
+        // SelectionCanvas 与章节列表是兄弟节点，用 TransformToVisual 计算相对坐标；
+        // 章节列表重建/回收时容器可能已脱离视觉树（此时会抛异常），捕获后跳过该卡片
         try
         {
             var transform = cardElement.TransformToVisual(SelectionCanvas);
@@ -227,7 +213,7 @@ public partial class ChapterView : UserControl
         }
     }
 
-    // ====================== 鍗＄墖鐐瑰嚮 / 閫夋嫨鎿嶄綔 ======================
+    // ====================== 卡片点击 / 选择操作 ======================
 
     private void ChapterCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -235,7 +221,7 @@ public partial class ChapterView : UserControl
         {
             return;
         }
-        // 鍗曞嚮鍒囨崲閫変腑鐘舵€侊細閫愪釜鐐归€夊嵆鍙閫夛紝涓嶅啀娓呯┖鍏朵粬宸查€夌珷鑺?
+        // 单击切换选中状态：逐个点选即可多选，不再清空其他已选章节
         card.IsSelected = !card.IsSelected;
         UpdateSelectedText();
         e.Handled = true;
@@ -262,11 +248,11 @@ public partial class ChapterView : UserControl
     private void UpdateSelectedText()
     {
         var count = Chapters.Count(c => c.IsSelected);
-        SelectedText.Text = count == 0 ? "鏈€夋嫨绔犺妭" : $"宸查€?{count} 绔?;
-        DownloadSelectedButton.Content = count == 0 ? "涓嬭浇閫変腑" : $"涓嬭浇閫変腑锛坽count}锛?;
+        SelectedText.Text = count == 0 ? "未选择章节" : $"已选 {count} 章";
+        DownloadSelectedButton.Content = count == 0 ? "下载选中" : $"下载选中（{count}）";
     }
 
-    // ====================== 涓嬭浇 ======================
+    // ====================== 下载 ======================
 
     private void ContextDownloadSelected_Click(object sender, RoutedEventArgs e) => DownloadSelected();
 
@@ -279,11 +265,11 @@ public partial class ChapterView : UserControl
         var selected = Chapters.Where(c => c.IsSelected && !c.IsDownloading && !c.IsDownloaded).ToList();
         if (selected.Count == 0)
         {
-            ToastService.Show("璇峰厛妗嗛€夐渶瑕佷笅杞界殑绔犺妭锛堝凡涓嬭浇鐨勯櫎澶栵級", ToastKind.Info);
+            ToastService.Show("请先框选需要下载的章节（已下载的除外）", ToastKind.Info);
             return;
         }
         await EnqueueChaptersAsync(selected);
-        ToastService.Show($"宸插皢 {selected.Count} 涓珷鑺傚姞鍏ヤ笅杞介槦鍒?, ToastKind.Success);
+        ToastService.Show($"已将 {selected.Count} 个章节加入下载队列", ToastKind.Success);
     }
 
     private async void DownloadAllButton_Click(object sender, RoutedEventArgs e)
@@ -291,53 +277,78 @@ public partial class ChapterView : UserControl
         var pending = Chapters.Where(c => !c.IsDownloading && !c.IsDownloaded).ToList();
         if (pending.Count == 0)
         {
-            ToastService.Show("娌℃湁闇€瑕佷笅杞界殑绔犺妭", ToastKind.Info);
+            ToastService.Show("没有需要下载的章节", ToastKind.Info);
             return;
         }
         await EnqueueChaptersAsync(pending);
-        ToastService.Show($"宸插皢鍏ㄩ儴 {pending.Count} 涓珷鑺傚姞鍏ヤ笅杞介槦鍒?, ToastKind.Success);
+        ToastService.Show($"已将全部 {pending.Count} 个章节加入下载队列", ToastKind.Success);
     }
 
     private async Task EnqueueChaptersAsync(IEnumerable<ChapterCardViewModel> cards)
     {
-        // 淇濆瓨涓撹緫鍏冩暟鎹紙鏍囩/浣滆€呯瓑锛夛紝渚涙湰鍦版ā寮忕绾垮睍绀?
-        if (_album is not null)
+        // 禁漫写专辑元数据（album.json）；其余源写通用来源元数据（source.json）
+        if (_detail is not null)
         {
-            App.Services.GetRequiredService<LocalLibraryService>()
-                .SaveMetadataForAlbum(_config.Current.DownloadDir, _album);
+            try
+            {
+                if (_source is JmSource jmSource)
+                {
+                    var resp = await jmSource.GetAlbumRawAsync(_detail.Id);
+                    var album = AlbumBuilder.Build(resp, _config.Current.DownloadDir);
+                    if (album is not null)
+                    {
+                        App.Services.GetRequiredService<LocalLibraryService>()
+                            .SaveMetadataForAlbum(_config.Current.DownloadDir, album);
+                    }
+                }
+                else
+                {
+                    App.Services.GetRequiredService<LocalLibraryService>()
+                        .SaveSourceMetadata(_config.Current.DownloadDir, _source.Info.Id, _detail);
+                }
+            }
+            catch
+            {
+                // 元数据失败不影响下载
+            }
         }
 
         foreach (var card in cards)
         {
-            if (!_chapterMap.TryGetValue(card.ChapterId, out var chapterInfo))
+            if (!_chapterMap.TryGetValue(card.ChapterId, out var chapter))
             {
                 continue;
             }
             card.IsDownloading = true;
-            await _downloadManager.SubmitChapterAsync(chapterInfo);
+            await _downloadManager.SubmitChapterAsync(chapter);
         }
     }
 
-    // ====================== 鏀惰棌 ======================
+    // ====================== 收藏（仅禁漫） ======================
 
     private async void FavoriteButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_album is null)
+        if (_detail is null)
         {
+            return;
+        }
+        if (_source is not JmSource)
+        {
+            ToastService.Show("该来源暂不支持收藏", ToastKind.Info);
             return;
         }
         if (!_session.IsLoggedIn)
         {
-            ToastService.Show("璇峰厛鐧诲綍鍚庡啀鏀惰棌", ToastKind.Info);
+            ToastService.Show("请先登录后再收藏", ToastKind.Info);
             return;
         }
         try
         {
-            var resp = await _client.ToggleFavoriteAlbumAsync(_album.Id);
-            var nowFavorite = resp.ToggleType == ToggleType.Add;
-            _album.IsFavorite = nowFavorite;
+            var client = App.Services.GetRequiredService<JmHttpClient>();
+            var resp = await client.ToggleFavoriteAlbumAsync(long.Parse(_detail.Id));
+            _isFavorite = resp.ToggleType == ToggleType.Add;
             UpdateFavoriteButton();
-            ToastService.Show(nowFavorite ? "宸插姞鍏ユ敹钘? : "宸插彇娑堟敹钘?, ToastKind.Success);
+            ToastService.Show(_isFavorite ? "已加入收藏" : "已取消收藏", ToastKind.Success);
         }
         catch (Exception ex)
         {
@@ -347,12 +358,12 @@ public partial class ChapterView : UserControl
 
     private void UpdateFavoriteButton()
     {
-        if (_album is null)
+        if (_detail is null)
         {
             return;
         }
-        FavoriteText.Text = _album.IsFavorite ? "宸叉敹钘? : "鏀惰棌";
-        if (_album.IsFavorite)
+        FavoriteText.Text = _isFavorite ? "已收藏" : "收藏";
+        if (_isFavorite)
         {
             FavoriteButton.Style = (Style)FindResource("PrimaryButtonStyle");
             FavoriteIcon.Foreground = Brushes.White;
@@ -368,7 +379,7 @@ public partial class ChapterView : UserControl
 
     private void BackButton_Click(object sender, RoutedEventArgs e) => Navigation.Back();
 
-    // ====================== 瑙嗚鏍戝伐鍏?======================
+    // ====================== 视觉树工具 ======================
 
     private static T? FindVisualParent<T>(DependencyObject? child, Func<T, bool>? predicate = null)
         where T : DependencyObject
@@ -403,12 +414,5 @@ public partial class ChapterView : UserControl
         return null;
     }
 }
-
-
-
-
-
-
-
 
 

@@ -6,7 +6,14 @@ namespace JmComic.App.ViewModels;
 /// <summary>搜索结果 / 收藏列表中的漫画卡片。</summary>
 public class AlbumCardViewModel : ObservableObject
 {
-    public long Id { get; init; }
+    public string Id { get; init; } = "";
+
+    /// <summary>聚合搜索时显示来源站点（如 "禁漫天堂"）；单源模式为空。</summary>
+    public string SourceBadge { get; init; } = "";
+
+    /// <summary>加载封面需要的请求头（防盗链 Referer 等）。</summary>
+    public IReadOnlyDictionary<string, string>? ImageHeaders { get; init; }
+
     public string Name { get; init; } = "";
     public string AuthorText { get; init; } = "";
     public string CoverUrl { get; init; } = "";
@@ -22,8 +29,8 @@ public class AlbumCardViewModel : ObservableObject
 /// <summary>章节卡片（支持框选状态）。</summary>
 public class ChapterCardViewModel : ObservableObject
 {
-    public long ChapterId { get; init; }
-    public long AlbumId { get; init; }
+    public string ChapterId { get; init; } = "";
+    public string AlbumId { get; init; } = "";
     public string Title { get; init; } = "";
 
     private bool _isDownloaded;
@@ -47,3 +54,4 @@ public class ChapterCardViewModel : ObservableObject
         set => SetProperty(ref _isSelected, value);
     }
 }
+

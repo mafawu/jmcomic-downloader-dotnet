@@ -57,6 +57,10 @@ public class JmSourceTests
         Assert.Equal("jm", source.Info.Id);
         Assert.Equal("禁漫天堂", source.Info.DisplayName);
         Assert.False(source.Info.RequiresLogin);
+        Assert.True(source.Info.SupportsSearchSort);
+        Assert.True(source.Info.SupportsCategories);
+        Assert.True(source.Info.SupportsRank);
+        Assert.True(source.Info.SupportsFavorites);
     }
 
     [Fact]
@@ -77,6 +81,7 @@ public class JmSourceTests
 
         Assert.False(result.IsSingleMatch);
         Assert.Equal(2, result.Total);
+        Assert.Equal(1, result.TotalPages);
         Assert.Equal(2, result.Items.Count);
         Assert.Equal("漫画一", result.Items[0].Title);
         Assert.Equal("作者A", result.Items[0].Author);
@@ -188,5 +193,6 @@ public class JmSourceTests
         Assert.Equal(expected, pages[0].BlockNum);
     }
 }
+
 
 

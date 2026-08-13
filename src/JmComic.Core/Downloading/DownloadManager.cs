@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Threading.Channels;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
@@ -9,20 +10,18 @@ namespace JmComic.Core.Downloading;
 
 /// <summary>
 /// 多线程下载引擎（对应原 Rust 实现 download_manager.rs）。
-/// 并发控制：最多同时获取 10 个章节的图片 URL、下载 3 个章节、40 张图片。
-/// 通过 C# 事件向前端推送实时进度。
 /// 站点差异已收敛到 IComicSource：章节图片列表（URL / headers / 分块数）由各源提供。
+/// 并发限流按源区分：每个源从 <see cref="ComicSourceInfo"/> 读取各自的图片/章节/图片 URL 获取并发上限，
+/// 限流配置不同的源互不影响；章节通过 <see cref="Chapter.SourceId"/> 解析所属源。
 /// </summary>
 public class DownloadManager : IDisposable
 {
-    private readonly IComicSource _source;
+    private readonly IReadOnlyDictionary<string, IComicSource> _sources;
     private readonly ConfigService _configService;
     private readonly HttpClient _imageClient;
 
-    private readonly Channel<ChapterInfo> _channel;
-    private readonly SemaphoreSlim _urlsWithBlockNumSem = new(10);
-    private readonly SemaphoreSlim _chapterSem = new(3);
-    private readonly SemaphoreSlim _imgSem = new(40);
+    private readonly Channel<Chapter> _channel;
+    private readonly ConcurrentDictionary<string, SourceThrottle> _throttles = new();
 
     private long _bytePerSec;
     private long _downloadedImageCount;
@@ -39,32 +38,38 @@ public class DownloadManager : IDisposable
     public event EventHandler<OverallProgressEventArgs>? OverallProgress;
     public event EventHandler<SpeedEventArgs>? SpeedChanged;
 
-    /// <summary>禁漫专用构造（保留旧签名，App 的 DI 无需改动）：内部包装为 JmSource。</summary>
-    public DownloadManager(JmHttpClient jmClient, ConfigService configService)
-        : this(new JmSource(jmClient), configService)
+    /// <summary>通用构造：按章节 SourceId 解析内容源，并发上限取各源自身配置。</summary>
+    public DownloadManager(IEnumerable<IComicSource> sources, ConfigService configService)
+        : this(sources, configService, CreateImageClient())
+    {
+    }
+
+    /// <summary>单源构造：下载全部走同一源。</summary>
+    public DownloadManager(IComicSource source, ConfigService configService)
+        : this(new[] { source }, configService)
     {
     }
 
     /// <summary>测试用构造：注入图片下载 HttpClient（与 API 客户端共用 FakeHandler）。</summary>
     internal DownloadManager(JmHttpClient jmClient, ConfigService configService, HttpClient imageClient)
-        : this(new JmSource(jmClient), configService, imageClient)
+        : this(new IComicSource[] { new JmSource(jmClient) }, configService, imageClient)
     {
     }
 
-    /// <summary>通用构造：下载管线只依赖 IComicSource，不感知具体站点。</summary>
-    public DownloadManager(IComicSource source, ConfigService configService)
-        : this(source, configService, CreateImageClient())
-    {
-    }
-
-    /// <summary>测试用构造：注入任意源与图片下载 HttpClient。</summary>
+    /// <summary>测试用构造：注入任意单源与图片下载 HttpClient。</summary>
     internal DownloadManager(IComicSource source, ConfigService configService, HttpClient imageClient)
+        : this(new[] { source }, configService, imageClient)
     {
-        _source = source;
+    }
+
+    /// <summary>测试用构造：注入多源与图片下载 HttpClient。</summary>
+    internal DownloadManager(IEnumerable<IComicSource> sources, ConfigService configService, HttpClient imageClient)
+    {
+        _sources = sources.ToDictionary(s => s.Info.Id, StringComparer.OrdinalIgnoreCase);
         _configService = configService;
         _imageClient = imageClient;
 
-        _channel = Channel.CreateBounded<ChapterInfo>(new BoundedChannelOptions(32)
+        _channel = Channel.CreateBounded<Chapter>(new BoundedChannelOptions(32)
         {
             FullMode = BoundedChannelFullMode.Wait,
             SingleReader = true,
@@ -75,19 +80,25 @@ public class DownloadManager : IDisposable
 
     private static HttpClient CreateImageClient() => new() { Timeout = TimeSpan.FromSeconds(30) };
 
-    /// <summary>提交一个章节的下载任务。</summary>
+    /// <summary>提交一个章节的下载任务（通用模型）。</summary>
+    public async Task SubmitChapterAsync(Chapter chapter, CancellationToken ct = default)
+    {
+        await _channel.Writer.WriteAsync(chapter, ct);
+    }
+
+    /// <summary>提交一个章节的下载任务（禁漫旧模型兼容重载）。</summary>
     public async Task SubmitChapterAsync(ChapterInfo chapterInfo, CancellationToken ct = default)
     {
-        await _channel.Writer.WriteAsync(chapterInfo, ct);
+        await SubmitChapterAsync(ToChapter(chapterInfo), ct);
     }
 
     private async Task ReceiverLoopAsync(CancellationToken ct)
     {
         try
         {
-            await foreach (var chapterInfo in _channel.Reader.ReadAllAsync(ct))
+            await foreach (var chapter in _channel.Reader.ReadAllAsync(ct))
             {
-                _ = ProcessChapterAsync(chapterInfo, ct);
+                _ = ProcessChapterAsync(chapter, ct);
             }
         }
         catch (OperationCanceledException)
@@ -115,34 +126,50 @@ public class DownloadManager : IDisposable
         }
     }
 
-    private async Task ProcessChapterAsync(ChapterInfo chapterInfo, CancellationToken ct)
+    /// <summary>按章节所属源解析 IComicSource；未知 id 回退到第一个源。</summary>
+    private IComicSource GetSource(Chapter chapter)
+        => _sources.TryGetValue(chapter.SourceId, out var source) ? source : _sources.Values.First();
+
+    /// <summary>取（或懒创建）指定源的并发闸门，上限取自源的 ComicSourceInfo。</summary>
+    private SourceThrottle GetThrottle(IComicSource source)
+        => _throttles.GetOrAdd(source.Info.Id, _ => new SourceThrottle
+        {
+            Urls = new SemaphoreSlim(source.Info.MaxUrlFetchConcurrency),
+            Chapters = new SemaphoreSlim(source.Info.MaxChapterConcurrency),
+            Images = new SemaphoreSlim(source.Info.MaxImageConcurrency),
+        });
+
+    private async Task ProcessChapterAsync(Chapter chapter, CancellationToken ct)
     {
-        var tempDownloadDir = GetTempDownloadDir(chapterInfo);
+        var source = GetSource(chapter);
+        var throttle = GetThrottle(source);
+        var chapterId = chapter.NumericId ?? 0;
+        var tempDownloadDir = GetTempDownloadDir(chapter);
         var downloadedCount = 0;
 
         try
         {
             ChapterPending?.Invoke(this, new ChapterPendingEventArgs(
-                chapterInfo.ChapterId, chapterInfo.ChapterTitle, chapterInfo.AlbumTitle));
+                chapterId, chapter.Title, chapter.ComicTitle));
 
             var downloadFormat = _configService.Current.DownloadFormat;
             var ext = downloadFormat.Extension();
 
             // 获取此章节每张图片的下载链接（含请求头与分块数）
-            var pages = await GetChapterPagesAsync(ToChapter(chapterInfo), ct);
+            var pages = await GetChapterPagesAsync(source, throttle, chapter, ct);
 
             // 总共需要下载的图片数量
             var total = pages.Count;
             Interlocked.Add(ref _totalImageCount, total);
 
             // 断点续传：正式目录已存在且包含全部图片 → 整章跳过，无需重新下载
-            var parentDir = Path.Combine(_configService.Current.DownloadDir, chapterInfo.AlbumTitle);
-            var finalDir = Path.Combine(parentDir, chapterInfo.ChapterTitle);
+            var parentDir = Path.Combine(_configService.Current.DownloadDir, chapter.ComicTitle);
+            var finalDir = Path.Combine(parentDir, chapter.Title);
             if (IsChapterComplete(finalDir, total, ext))
             {
-                ChapterStart?.Invoke(this, new ChapterStartEventArgs(chapterInfo.ChapterId, total));
+                ChapterStart?.Invoke(this, new ChapterStartEventArgs(chapterId, total));
                 Interlocked.Add(ref _downloadedImageCount, total);
-                ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterInfo.ChapterId, null));
+                ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterId, null));
                 return;
             }
 
@@ -150,11 +177,11 @@ public class DownloadManager : IDisposable
             // 清理临时目录中不属于本次预期文件名集合的文件（旧格式后缀 / 残留 .tmp / 页数变化后的多余文件）
             CleanupTempDir(tempDownloadDir, total, ext);
 
-            // 限制同时下载的章节数量
-            await _chapterSem.WaitAsync(ct);
+            // 限制同时下载的章节数量（按源）
+            await throttle.Chapters.WaitAsync(ct);
             try
             {
-                ChapterStart?.Invoke(this, new ChapterStartEventArgs(chapterInfo.ChapterId, total));
+                ChapterStart?.Invoke(this, new ChapterStartEventArgs(chapterId, total));
 
                 var tasks = new List<Task>();
                 for (var i = 0; i < pages.Count; i++)
@@ -162,7 +189,7 @@ public class DownloadManager : IDisposable
                     var page = pages[i];
                     var savePath = Path.Combine(tempDownloadDir, $"{i + 1:D3}.{ext}");
                     var task = DownloadImageAsync(
-                        chapterInfo.ChapterId, page, savePath, downloadFormat,
+                        chapterId, throttle, page, savePath, downloadFormat,
                         () => Interlocked.Increment(ref downloadedCount), ct);
                     tasks.Add(task);
                 }
@@ -170,7 +197,7 @@ public class DownloadManager : IDisposable
             }
             finally
             {
-                _chapterSem.Release();
+                throttle.Chapters.Release();
             }
 
             // 如果所有图片全部已处理（无论成功或失败），则清空全局进度计数
@@ -195,17 +222,17 @@ public class DownloadManager : IDisposable
                 {
                     Directory.Move(tempDownloadDir, finalDir);
                 }
-                ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterInfo.ChapterId, null));
+                ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterId, null));
             }
             else
             {
-                var errMsg = $"`{chapterInfo.ChapterTitle}`总共有`{total}`张图片，但只下载了`{downloadedCount}`张";
-                ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterInfo.ChapterId, errMsg));
+                var errMsg = $"`{chapter.Title}`总共有`{total}`张图片，但只下载了`{downloadedCount}`张";
+                ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterId, errMsg));
             }
         }
         catch (Exception ex)
         {
-            ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterInfo.ChapterId, ex.Message));
+            ChapterEnd?.Invoke(this, new ChapterEndEventArgs(chapterId, ex.Message));
         }
     }
 
@@ -216,10 +243,11 @@ public class DownloadManager : IDisposable
         Title = chapterInfo.ChapterTitle,
         ComicId = chapterInfo.AlbumId.ToString(),
         ComicTitle = chapterInfo.AlbumTitle,
+        SourceId = "jm",
     };
 
     private async Task DownloadImageAsync(
-        long chapterId, ImagePage page, string savePath, DownloadFormat downloadFormat,
+        long chapterId, SourceThrottle throttle, ImagePage page, string savePath, DownloadFormat downloadFormat,
         Func<int> onSuccess, CancellationToken ct)
     {
         // 断点续传：目标文件已存在且非空（原子写入保证完整）→ 跳过下载，直接计为成功
@@ -231,8 +259,8 @@ public class DownloadManager : IDisposable
             return;
         }
 
-        // 限制同时下载的图片数量
-        await _imgSem.WaitAsync(ct);
+        // 限制同时下载的图片数量（按源）
+        await throttle.Images.WaitAsync(ct);
         byte[] imageData;
         try
         {
@@ -245,7 +273,7 @@ public class DownloadManager : IDisposable
         }
         finally
         {
-            _imgSem.Release();
+            throttle.Images.Release();
         }
 
         // 保存图片（图片拼接是 CPU 密集型操作，放到线程池执行，避免阻塞）
@@ -281,17 +309,18 @@ public class DownloadManager : IDisposable
         }
     }
 
-    /// <summary>从内容源获取章节图片页列表（限制同时获取的数量）。</summary>
-    private async Task<IReadOnlyList<ImagePage>> GetChapterPagesAsync(Chapter chapter, CancellationToken ct)
+    /// <summary>从内容源获取章节图片页列表（限制同一源同时获取的数量）。</summary>
+    private async Task<IReadOnlyList<ImagePage>> GetChapterPagesAsync(
+        IComicSource source, SourceThrottle throttle, Chapter chapter, CancellationToken ct)
     {
-        await _urlsWithBlockNumSem.WaitAsync(ct);
+        await throttle.Urls.WaitAsync(ct);
         try
         {
-            return await _source.GetChapterImagesAsync(chapter, ct);
+            return await source.GetChapterImagesAsync(chapter, ct);
         }
         finally
         {
-            _urlsWithBlockNumSem.Release();
+            throttle.Urls.Release();
         }
     }
 
@@ -325,15 +354,14 @@ public class DownloadManager : IDisposable
         throw lastException ?? new JmException($"下载图片`{page.Url}`失败");
     }
 
-    private string GetTempDownloadDir(ChapterInfo chapterInfo)
+    private string GetTempDownloadDir(Chapter chapter)
     {
         // 以 `.下载中-` 开头，表示是临时目录（与原版一致）
         return Path.Combine(
             _configService.Current.DownloadDir,
-            chapterInfo.AlbumTitle,
-            $".下载中-{chapterInfo.ChapterTitle}");
+            chapter.ComicTitle,
+            $".下载中-{chapter.Title}");
     }
-
 
     /// <summary>断点续传判断：文件已存在且非空（原子写入保证完整）。</summary>
     internal static bool IsFileComplete(string path)
@@ -390,6 +418,21 @@ public class DownloadManager : IDisposable
         Directory.Delete(tempDownloadDir, true);
     }
 
+    /// <summary>按源隔离的并发闸门（图片 URL 获取 / 章节 / 图片下载）。</summary>
+    private sealed class SourceThrottle : IDisposable
+    {
+        public required SemaphoreSlim Urls { get; init; }
+        public required SemaphoreSlim Chapters { get; init; }
+        public required SemaphoreSlim Images { get; init; }
+
+        public void Dispose()
+        {
+            Urls.Dispose();
+            Chapters.Dispose();
+            Images.Dispose();
+        }
+    }
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -403,9 +446,11 @@ public class DownloadManager : IDisposable
             // 忽略退出时的任务异常
         }
         _cts.Dispose();
-        _chapterSem.Dispose();
-        _imgSem.Dispose();
-        _urlsWithBlockNumSem.Dispose();
+        foreach (var throttle in _throttles.Values)
+        {
+            throttle.Dispose();
+        }
+        _throttles.Clear();
         _imageClient.Dispose();
     }
 }

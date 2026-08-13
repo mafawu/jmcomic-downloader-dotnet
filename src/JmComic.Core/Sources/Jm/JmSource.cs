@@ -23,6 +23,14 @@ public class JmSource : IComicSource
         Id = "jm",
         DisplayName = "禁漫天堂",
         RequiresLogin = false,
+        SupportsSearchSort = true,
+        SupportsCategories = true,
+        SupportsRank = true,
+        SupportsWeekly = true,
+        SupportsFavorites = true,
+        MaxImageConcurrency = 40,
+        MaxChapterConcurrency = 3,
+        MaxUrlFetchConcurrency = 10,
     };
 
     public async Task<SearchResult> SearchAsync(string keyword, int page, CancellationToken ct = default)
@@ -39,13 +47,19 @@ public class JmSource : IComicSource
 
         var data = resp.SearchRespData
                    ?? throw new JmException("搜索响应缺少 SearchRespData 或 AlbumRespData");
+        // 每页 24 条，向上取整得到总页数
+        var totalPages = data.Total <= 0 ? 1 : (data.Total + 23) / 24;
         return new SearchResult
         {
             Items = data.Content.Select(ToSummary).ToList(),
             Total = data.Total,
+            TotalPages = totalPages,
         };
     }
 
+    /// <summary>获取禁漫原始专辑数据（保留站点原始字段，供本地元数据保存等场景使用）。</summary>
+    public Task<AlbumRespData> GetAlbumRawAsync(string comicId, CancellationToken ct = default)
+        => _client.GetAlbumAsync(long.Parse(comicId), ct);
     public async Task<ComicDetail> GetComicAsync(string comicId, CancellationToken ct = default)
     {
         var album = await _client.GetAlbumAsync(long.Parse(comicId), ct);
@@ -91,6 +105,20 @@ public class JmSource : IComicSource
         CoverUrl = ToAbsoluteUrl(item.Image),
     };
 
+    /// <summary>禁漫封面规范化：相对路径补全为绝对 URL（老页面/本地面板复用）。</summary>
+    public static string NormalizeCover(long albumId, string image)
+    {
+        if (string.IsNullOrWhiteSpace(image))
+        {
+            return $"https://{JmConstants.ImageDomain}/media/albums/{albumId}_3x4.jpg";
+        }
+        if (image.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        {
+            return image;
+        }
+        return $"https://{JmConstants.ImageDomain}{image.TrimStart('/')}";
+    }
+
     /// <summary>把站点返回的相对图片路径补全为绝对 URL。</summary>
     private static string ToAbsoluteUrl(string path)
     {
@@ -126,6 +154,7 @@ public class JmSource : IComicSource
                 NumericId = chapterId,
                 Title = chapterTitle,
                 ComicId = album.Id.ToString(),
+                SourceId = "jm",
                 ComicTitle = albumTitle,
             });
         }
@@ -139,6 +168,7 @@ public class JmSource : IComicSource
                 NumericId = album.Id,
                 Title = "第1话",
                 ComicId = album.Id.ToString(),
+                SourceId = "jm",
                 ComicTitle = albumTitle,
             });
         }
@@ -154,4 +184,6 @@ public class JmSource : IComicSource
         };
     }
 }
+
+
 

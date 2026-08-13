@@ -48,6 +48,10 @@
                         <TextBlock Text="禁漫天堂漫画下载" FontSize="10"
                                    Foreground="{DynamicResource TextSecondaryBrush}" />
                     </StackPanel>
+                    <ComboBox x:Name="SourceBox" Width="132" Margin="14,0,0,0"
+                              VerticalAlignment="Center" FontSize="12"
+                              shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                              SelectionChanged="SourceBox_SelectionChanged" />
                 </StackPanel>
 
                 <!-- 导航（分段容器：发现 / 我的 两组） -->
@@ -182,6 +186,7 @@
 
     </Grid>
 </Window>
+
 
 
 

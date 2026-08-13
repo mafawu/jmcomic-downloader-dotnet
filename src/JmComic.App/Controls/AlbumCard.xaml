@@ -15,8 +15,25 @@
             <Grid Width="166" Height="222" ClipToBounds="True">
                 <Border CornerRadius="14,14,0,0" Background="{DynamicResource HoverBgBrush}" />
                 <Image common:ImageLoader.Source="{Binding CoverUrl}"
+                       common:ImageLoader.Headers="{Binding ImageHeaders}"
                        Width="166" Height="222"
                        Stretch="UniformToFill" />
+                <!-- 来源站点徽标（聚合搜索时显示） -->
+                <Border Background="{DynamicResource OverlayBrush}" CornerRadius="6"
+                        Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Top"
+                        Margin="8,8,0,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SourceBadge}" Value="">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding SourceBadge}" FontSize="10" Foreground="White" />
+                </Border>
                 <Border x:Name="Overlay" Background="{DynamicResource OverlayBrush}" Visibility="Collapsed">
                     <Button Style="{StaticResource PrimaryButtonStyle}"
                             Content="一键下载"
@@ -54,3 +71,4 @@
         </StackPanel>
     </Border>
 </UserControl>
+

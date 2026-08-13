@@ -278,30 +278,18 @@
                         <TextBox x:Name="KeywordBox" Style="{StaticResource ModernTextBoxStyle}"
                                  MinWidth="120" Padding="34,7,30,7"
                                  KeyDown="KeywordBox_KeyDown"
+                                 GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus"
+                                 TextChanged="KeywordBox_TextChanged"
                                  VerticalContentAlignment="Center"
                                  ToolTip="输入标签或关键词，与当前分类组合搜索" />
                         <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
                                    Foreground="{DynamicResource TextDisabledBrush}"
                                    IsHitTestVisible="False" Margin="12,0,0,0"
                                    VerticalAlignment="Center" HorizontalAlignment="Left" />
-                        <TextBlock Text="输入标签或关键词，与当前分类组合搜索" FontSize="12.5"
+                        <TextBlock x:Name="KeywordPlaceholder" Text="输入标签或关键词，与当前分类组合搜索" FontSize="12.5"
                                    Foreground="{DynamicResource TextDisabledBrush}"
                                    IsHitTestVisible="False" Margin="34,0,0,0"
-                                   VerticalAlignment="Center" HorizontalAlignment="Left">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Text, ElementName=KeywordBox}" Value="">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding Text, ElementName=KeywordBox}" Value="{x:Null}">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
+                                   VerticalAlignment="Center" HorizontalAlignment="Left" />
                         <Button x:Name="ClearKeywordButton" Style="{StaticResource IconButtonStyle}"
                                 ToolTip="清除" Click="ClearKeywordButton_Click"
                                 HorizontalAlignment="Right" Margin="0,0,4,0"

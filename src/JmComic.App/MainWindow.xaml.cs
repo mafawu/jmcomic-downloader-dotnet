@@ -15,6 +15,7 @@ using JmComic.App.ViewModels;
 using JmComic.App.Views;
 using JmComic.Core;
 using JmComic.Core.Models;
+using JmComic.Core.Sources;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JmComic.App;
@@ -23,14 +24,17 @@ namespace JmComic.App;
 public partial class MainWindow : Window
 {
     private readonly SessionService _session;
+    private readonly SourceManager _sourceManager;
     private readonly SearchView _searchView;
     private RankView? _rankView;
+    private RankBrowseView? _rankBrowseView;
     private CategoryView? _categoryView;
+    private CategoryBrowseView? _categoryBrowseView;
     private FavoriteView? _favoriteView;
     private LocalView? _localView;
     private UserControl? _localTabContent;
     private WeeklyView? _weeklyView;
-    private readonly Dictionary<long, ChapterView> _chapterViews = new();
+    private readonly Dictionary<string, ChapterView> _chapterViews = new();
     private UserControl? _lastPage;
     private bool _panelVisible;
 
@@ -39,11 +43,12 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _session = App.Services.GetRequiredService<SessionService>();
+        _sourceManager = App.Services.GetRequiredService<SourceManager>();
         _searchView = new SearchView();
         _lastPage = _searchView;
         PageHost.Content = _searchView;
 
-        Navigation.OpenAlbumHandler = OpenAlbum;
+        Navigation.OpenComicHandler = OpenComic;
         Navigation.OpenRankHandler = OpenRank;
         Navigation.OpenReaderHandler = OpenReader;
         Navigation.OpenLocalDetailHandler = OpenLocalDetail;
@@ -60,6 +65,15 @@ public partial class MainWindow : Window
             HideRightPanel();
             PageHost.Content = _lastPage;
         };
+
+        foreach (var source in _sourceManager.Sources)
+        {
+            SourceBox.Items.Add(new ComboBoxItem { Content = source.Info.DisplayName, Tag = source });
+        }
+        SourceBox.SelectedItem = SourceBox.Items.Cast<ComboBoxItem>()
+            .FirstOrDefault(i => ReferenceEquals(i.Tag, _sourceManager.Current));
+        _sourceManager.CurrentChanged += () => Dispatcher.Invoke(UpdateNavCapabilities);
+        UpdateNavCapabilities();
 
         _session.PropertyChanged += (_, e) =>
         {
@@ -98,10 +112,20 @@ public partial class MainWindow : Window
         }
         else if (ReferenceEquals(sender, NavRank))
         {
-            _rankView ??= new RankView();
-            _lastPage = _rankView;
-            PageHost.Content = _rankView;
-            _rankView.OnShown();
+            if (_sourceManager.Current is IRankSource)
+            {
+                _rankBrowseView ??= new RankBrowseView();
+                _lastPage = _rankBrowseView;
+                PageHost.Content = _rankBrowseView;
+                _rankBrowseView.OnShown();
+            }
+            else
+            {
+                _rankView ??= new RankView();
+                _lastPage = _rankView;
+                PageHost.Content = _rankView;
+                _rankView.OnShown();
+            }
         }
         else if (ReferenceEquals(sender, NavCategory))
         {
@@ -147,18 +171,20 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenAlbum(long albumId)
+    private void OpenComic(string sourceId, string comicId)
     {
         HideRightPanel();
-        // 复用已打开的专辑详情页，保持章节列表/滚动位置/选择状态
-        if (!_chapterViews.TryGetValue(albumId, out var view))
+        var source = _sourceManager.Get(sourceId);
+        var key = $"{source.Info.Id}:{comicId}";
+        // 复用已打开的详情页，保持章节列表/滚动位置/选择状态
+        if (!_chapterViews.TryGetValue(key, out var view))
         {
             if (_chapterViews.Count >= 30)
             {
                 _chapterViews.Clear();
             }
-            view = new ChapterView(albumId);
-            _chapterViews[albumId] = view;
+            view = new ChapterView(source, comicId);
+            _chapterViews[key] = view;
         }
         PageHost.Content = view;
     }
@@ -196,6 +222,75 @@ public partial class MainWindow : Window
         _panelVisible = true;
         UpdatePanelVisibility();
     }
+    // ====================== 内容源切换 ======================
+
+    private void SourceBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SourceBox.SelectedItem is ComboBoxItem { Tag: IComicSource source })
+        {
+            _sourceManager.Current = source;
+        }
+    }
+
+    /// <summary>按当前源能力显隐导航项；切源后把不能由新源服务的页面重置回搜索页。</summary>
+    private void UpdateNavCapabilities()
+    {
+        var info = _sourceManager.Current.Info;
+        NavRank.Visibility = info.SupportsRank ? Visibility.Visible : Visibility.Collapsed;
+        NavWeekly.Visibility = info.SupportsWeekly ? Visibility.Visible : Visibility.Collapsed;
+        NavCategory.Visibility = info.SupportsCategories ? Visibility.Visible : Visibility.Collapsed;
+        NavFavorite.Visibility = info.SupportsFavorites ? Visibility.Visible : Visibility.Collapsed;
+
+        var onUnsupportedPage = (NavWeekly.IsChecked == true && !info.SupportsWeekly)
+                               || (NavFavorite.IsChecked == true && !info.SupportsFavorites)
+                               || (NavRank.IsChecked == true && !info.SupportsRank);
+        if (onUnsupportedPage)
+        {
+            NavSearch.IsChecked = true;
+            _lastPage = _searchView;
+            PageHost.Content = _searchView;
+            return;
+        }
+
+        // 排行页按源切换：IRankSource 用通用排行浏览，禁漫保留原排行页
+        if (NavRank.IsChecked == true)
+        {
+            if (_sourceManager.Current is IRankSource && !ReferenceEquals(PageHost.Content, _rankBrowseView))
+            {
+                _rankBrowseView ??= new RankBrowseView();
+                _lastPage = _rankBrowseView;
+                PageHost.Content = _rankBrowseView;
+                _rankBrowseView.OnShown();
+            }
+            else if (_sourceManager.Current is not IRankSource && !ReferenceEquals(PageHost.Content, _rankView))
+            {
+                _rankView ??= new RankView();
+                _lastPage = _rankView;
+                PageHost.Content = _rankView;
+                _rankView.OnShown();
+            }
+        }
+
+        // 分类页按源切换：支持 ICategorySource 的源用通用分类浏览，禁漫保留主题页
+        if (NavCategory.IsChecked == true)
+        {
+            if (_sourceManager.Current is ICategorySource && !ReferenceEquals(PageHost.Content, _categoryBrowseView))
+            {
+                _categoryBrowseView ??= new CategoryBrowseView();
+                _lastPage = _categoryBrowseView;
+                PageHost.Content = _categoryBrowseView;
+                _categoryBrowseView.OnShown();
+            }
+            else if (_sourceManager.Current is not ICategorySource && !ReferenceEquals(PageHost.Content, _categoryView))
+            {
+                _categoryView ??= new CategoryView();
+                _lastPage = _categoryView;
+                PageHost.Content = _categoryView;
+                _categoryView.OnShown();
+            }
+        }
+    }
+
     // ====================== 顶栏操作 ======================
 
     private void ThemeToggle_Click(object sender, RoutedEventArgs e)
@@ -444,6 +539,11 @@ public partial class MainWindow : Window
         _favoriteView?.Refresh();
     }
 }
+
+
+
+
+
 
 
 

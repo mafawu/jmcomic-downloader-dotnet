@@ -1,5 +1,6 @@
 using System.Text.Json;
 using JmComic.Core.Models;
+using JmComic.Core.Sources;
 using JmComic.Core.Utils;
 
 namespace JmComic.Core.Services;
@@ -24,6 +25,9 @@ public class LocalLibraryService
 
     /// <summary>原版 jmcomic-downloader（Tauri 版）生成的元数据文件，扫描时兼容读取。</summary>
     public const string LegacyMetadataFileName = "元数据.json";
+
+    /// <summary>通用来源元数据（wnacg/hitomi 等非禁漫源下载时写入，用于识别源与站点 id）。</summary>
+    public const string SourceMetadataFileName = "source.json";
 
     private static readonly string[] CoverExtensions = { ".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif" };
 
@@ -89,6 +93,7 @@ public class LocalLibraryService
             }
 
             var metadata = TryReadMetadata(albumDir);
+            var sourceMetadata = TryReadSourceMetadata(albumDir);
             var chapterDirs = Directory.EnumerateDirectories(albumDir)
                 .Where(d => !IsTempDownloadDir(Path.GetFileName(d)))
                 .ToList();
@@ -99,7 +104,7 @@ public class LocalLibraryService
                 continue;
             }
 
-            result.Add(BuildComic(albumDir, dirName, metadata, chapterDirs, countImages));
+            result.Add(BuildComic(albumDir, dirName, metadata, sourceMetadata, chapterDirs, countImages));
         }
 
         return result.OrderByDescending(c => c.ModifiedAt).ToList();
@@ -144,6 +149,7 @@ public class LocalLibraryService
             }
 
             var metadata = TryReadMetadata(albumDir);
+            var sourceMetadata = TryReadSourceMetadata(albumDir);
             var chapterDirs = Directory.EnumerateDirectories(albumDir)
                 .Where(d => !IsTempDownloadDir(Path.GetFileName(d)))
                 .ToList();
@@ -154,7 +160,7 @@ public class LocalLibraryService
                 continue;
             }
 
-            result.Add(BuildComic(albumDir, dirName, metadata, chapterDirs, false));
+            result.Add(BuildComic(albumDir, dirName, metadata, sourceMetadata, chapterDirs, false));
         }
 
         return result.OrderByDescending(c => c.ModifiedAt).ToList();
@@ -366,7 +372,8 @@ public class LocalLibraryService
     }
 
     private static LocalComic BuildComic(
-        string albumDir, string dirName, AlbumMetadata? metadata, List<string> chapterDirs, bool countImages)
+        string albumDir, string dirName, AlbumMetadata? metadata, SourceMetadata? sourceMetadata,
+        List<string> chapterDirs, bool countImages)
     {
         var chapterCount = chapterDirs.Count;
         var imageCount = 0L;
@@ -382,6 +389,7 @@ public class LocalLibraryService
         var parsed = MangaFilenameParser.Parse(dirName);
         return new LocalComic
         {
+            SourceId = sourceMetadata?.SourceId ?? "",
             AlbumId = metadata?.Id,
             Name = metadata is null && parsed.Title.Length > 0 ? parsed.Title : dirName,
             NameCn = metadata?.NameCn is { Length: > 0 } nameCn
@@ -558,7 +566,7 @@ public class LocalLibraryService
     private static DateTime? GetMetadataStamp(string albumDir)
     {
         DateTime? stamp = null;
-        foreach (var name in new[] { MetadataFileName, LegacyMetadataFileName })
+        foreach (var name in new[] { MetadataFileName, LegacyMetadataFileName, SourceMetadataFileName })
         {
             var path = Path.Combine(albumDir, name);
             if (File.Exists(path))
@@ -573,7 +581,96 @@ public class LocalLibraryService
         return stamp;
     }
 
+    /// <summary>通用来源元数据：下载非禁漫源漫画时写入（目录名与下载引擎保持一致）。</summary>
+    public void SaveSourceMetadata(string downloadDir, string sourceId, ComicDetail detail)
+    {
+        if (string.IsNullOrWhiteSpace(downloadDir) || detail is null || string.IsNullOrWhiteSpace(detail.Title))
+        {
+            return;
+        }
+        var albumDir = Path.Combine(downloadDir, FilenameFilter.Filter(detail.Title));
+        Directory.CreateDirectory(albumDir);
+
+        var metadata = new SourceMetadata
+        {
+            SourceId = sourceId,
+            ComicId = detail.Id,
+            Title = detail.Title,
+            Authors = detail.Authors,
+            Tags = detail.Tags,
+            CoverUrl = detail.CoverUrl,
+            Description = detail.Description,
+        };
+        var target = Path.Combine(albumDir, SourceMetadataFileName);
+        var temp = target + ".tmp";
+        File.WriteAllText(temp, JsonSerializer.Serialize(metadata, JsonOptions));
+        File.Move(temp, target, true);
+    }
+
+    /// <summary>读取通用来源元数据；不存在或损坏时返回 null。</summary>
+    public SourceMetadata? ReadSourceMetadata(string albumDir)
+    {
+        try
+        {
+            var path = Path.Combine(albumDir, SourceMetadataFileName);
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+            return JsonSerializer.Deserialize<SourceMetadata>(File.ReadAllText(path));
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private SourceMetadata? TryReadSourceMetadata(string albumDir) => ReadSourceMetadata(albumDir);
+
+    /// <summary>扫描下载目录，收集「已下载」漫画的 (源, id) 键集合（无 source.json 的旧版下载回退为禁漫 jm）。</summary>
+    public HashSet<string> GetDownloadedKeys(string downloadDir)
+    {
+        var keys = new HashSet<string>(StringComparer.Ordinal);
+        if (string.IsNullOrWhiteSpace(downloadDir) || !Directory.Exists(downloadDir))
+        {
+            return keys;
+        }
+
+        foreach (var albumDir in ExpandComicDirs(downloadDir))
+        {
+            var dirName = Path.GetFileName(albumDir);
+            if (string.IsNullOrEmpty(dirName))
+            {
+                continue;
+            }
+            var chapterDirs = Directory.EnumerateDirectories(albumDir)
+                .Where(d => !IsTempDownloadDir(Path.GetFileName(d)))
+                .ToList();
+            if (chapterDirs.Count == 0)
+            {
+                continue;
+            }
+
+            var sourceMetadata = TryReadSourceMetadata(albumDir);
+            var metadata = TryReadMetadata(albumDir);
+            var sourceId = sourceMetadata?.SourceId is { Length: > 0 } sid ? sid : "jm";
+            var comicId = sourceMetadata?.ComicId is { Length: > 0 } cid
+                ? cid
+                : metadata?.Id is > 0 ? metadata.Id.ToString() : null;
+            if (comicId is not null)
+            {
+                keys.Add(KeyFor(sourceId, comicId));
+            }
+        }
+        return keys;
+    }
+
+    /// <summary>「已下载」键格式：{sourceId}:{comicId}，列表页卡片按源与 id 直接匹配。</summary>
+    public static string KeyFor(string sourceId, string comicId) => $"{sourceId}:{comicId}";
     private static bool IsTempDownloadDir(string name) => name.StartsWith(".下载中-", StringComparison.Ordinal);
 }
+
+
+
 
 

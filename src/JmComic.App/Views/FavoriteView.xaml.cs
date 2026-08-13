@@ -10,6 +10,7 @@ using JmComic.Core.Downloading;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
 using JmComic.Core.Services;
+using JmComic.Core.Sources.Jm;
 
 namespace JmComic.App.Views;
 
@@ -22,7 +23,10 @@ public partial class FavoriteView : UserControl
     private readonly JmHttpClient _client;
     private readonly ConfigService _config;
     private readonly DownloadManager _downloadManager;
+    private readonly LocalLibraryService _localLibrary;
 
+    /// <summary>已下载漫画的 (源,id) 键集合（卡片右上角徽章）。</summary>
+    private HashSet<string> _downloadedKeys = new();
     private long _page = 1;
     private long _total;
     private bool _hasLoaded;
@@ -36,6 +40,7 @@ public partial class FavoriteView : UserControl
         _client = App.Services.GetRequiredService<JmHttpClient>();
         _config = App.Services.GetRequiredService<ConfigService>();
         _downloadManager = App.Services.GetRequiredService<DownloadManager>();
+        _localLibrary = App.Services.GetRequiredService<LocalLibraryService>();
         FavoriteItems.ItemsSource = Items;
     }
 
@@ -91,6 +96,7 @@ public partial class FavoriteView : UserControl
             return;
         }
         _page = page;
+        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
         FavoriteLoading.Visibility = Visibility.Visible;
         FavoriteEmpty.Visibility = Visibility.Collapsed;
         FavoriteScroller.Visibility = Visibility.Collapsed;
@@ -140,11 +146,12 @@ public partial class FavoriteView : UserControl
         var id = long.TryParse(item.Id, out var parsed) ? parsed : 0;
         return new AlbumCardViewModel
         {
-            Id = id,
+            Id = item.Id,
             Name = item.Name,
             AuthorText = string.IsNullOrEmpty(item.Author) ? "未知作者" : item.Author,
-            CoverUrl = SearchView.NormalizeCover(id, item.Image),
+            CoverUrl = JmSource.NormalizeCover(id, item.Image),
             IsFavorite = true,
+            IsDownloaded = _downloadedKeys.Contains(LocalLibraryService.KeyFor("jm", item.Id)),
             OpenCommand = new RelayCommand(_ => Navigation.OpenAlbum(id)),
             DownloadCommand = new AsyncRelayCommand(async _ =>
             {
@@ -162,4 +169,7 @@ public partial class FavoriteView : UserControl
         };
     }
 }
+
+
+
 

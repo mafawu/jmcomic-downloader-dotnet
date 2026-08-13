@@ -10,6 +10,7 @@ using JmComic.Core.Downloading;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
 using JmComic.Core.Services;
+using JmComic.Core.Sources.Jm;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JmComic.App.Views;
@@ -29,7 +30,7 @@ public partial class WeeklyView : UserControl
     private List<CategoryInWeeklyInfo> _categories = new();
     private string _categoryId = "";
     private string _typeId = "";
-    private HashSet<long> _downloadedIds = new();
+    private HashSet<string> _downloadedKeys = new();
     private bool _hasLoaded;
     private bool _loading;
     private int _listVersion;
@@ -151,7 +152,7 @@ public partial class WeeklyView : UserControl
             {
                 return; // 已有更新的请求，丢弃过期响应
             }
-            RefreshDownloadedIds();
+            _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
 
             Items.Clear();
             foreach (var item in resp.List)
@@ -168,35 +169,18 @@ public partial class WeeklyView : UserControl
         }
     }
 
-    /// <summary>扫描本地下载目录，收集已下载漫画 id。</summary>
-    private void RefreshDownloadedIds()
-    {
-        _downloadedIds = new HashSet<long>();
-        var downloadDir = _config.Current.DownloadDir;
-        if (string.IsNullOrWhiteSpace(downloadDir) || !Directory.Exists(downloadDir))
-        {
-            return;
-        }
-        foreach (var comic in _localLibrary.Scan(downloadDir))
-        {
-            if (comic.AlbumId is long id)
-            {
-                _downloadedIds.Add(id);
-            }
-        }
-    }
 
     private AlbumCardViewModel ToCard(ComicInWeeklyRespData item)
     {
         var id = long.TryParse(item.Id, out var parsed) ? parsed : 0;
         return new AlbumCardViewModel
         {
-            Id = id,
+            Id = item.Id,
             Name = item.Name,
             AuthorText = string.IsNullOrEmpty(item.Author) ? "未知作者" : item.Author,
-            CoverUrl = SearchView.NormalizeCover(id, item.Image),
+            CoverUrl = JmSource.NormalizeCover(id, item.Image),
             IsFavorite = item.IsFavorite,
-            IsDownloaded = _downloadedIds.Contains(id),
+            IsDownloaded = _downloadedKeys.Contains(LocalLibraryService.KeyFor("jm", item.Id)),
             OpenCommand = new RelayCommand(_ => Navigation.OpenAlbum(id)),
             DownloadCommand = new AsyncRelayCommand(async _ =>
             {
@@ -228,3 +212,4 @@ public partial class WeeklyView : UserControl
         Result,
     }
 }
+

@@ -11,4 +11,32 @@ public class ComicSourceInfo
 
     /// <summary>该源的核心能力（搜索/详情/下载）是否需要登录。</summary>
     public bool RequiresLogin { get; init; }
+
+    /// <summary>搜索是否支持排序选项（最新/人气等）。</summary>
+    public bool SupportsSearchSort { get; init; }
+
+    /// <summary>是否支持分类浏览。</summary>
+    public bool SupportsCategories { get; init; }
+
+    /// <summary>是否支持排行。</summary>
+    public bool SupportsRank { get; init; }
+
+    /// <summary>是否支持每周必看（禁漫专属首页推荐）。</summary>
+    public bool SupportsWeekly { get; init; }
+
+    /// <summary>是否支持收藏（通常需登录）。</summary>
+    public bool SupportsFavorites { get; init; }
+
+    /// <summary>加载封面图片时需要附加的请求头（防盗链 Referer 等）。</summary>
+    public IReadOnlyDictionary<string, string> CoverHeaders { get; init; } = new Dictionary<string, string>();
+
+    /// <summary>并发下载图片的最大数量（站点限流配置，默认 40）。</summary>
+    public int MaxImageConcurrency { get; init; } = 40;
+
+    /// <summary>并发下载章节的最大数量（默认 3）。</summary>
+    public int MaxChapterConcurrency { get; init; } = 3;
+
+    /// <summary>并发获取章节图片 URL 的最大数量（默认 10）。</summary>
+    public int MaxUrlFetchConcurrency { get; init; } = 10;
 }
+

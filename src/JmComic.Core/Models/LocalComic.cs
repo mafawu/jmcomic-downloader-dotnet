@@ -29,6 +29,9 @@ public class AlbumMetadata
 /// <summary>本地模式下扫描到的漫画（来自本地目录，可离线展示）。</summary>
 public class LocalComic
 {
+    /// <summary>所属内容源 id（如 "wnacg"）；空表示禁漫。旧版禁漫下载无此字段，扫描时回退为禁漫。</summary>
+    public string SourceId { get; init; } = "";
+
     public long? AlbumId { get; init; }
     public string Name { get; init; } = "";
     /// <summary>中文名：优先来自元数据，否则扫描时提取/翻译，用于搜索与展示。</summary>
@@ -55,3 +58,4 @@ public class LocalLibraryCache
     /// <summary>根目录（绝对路径）→ 该目录下已扫描到的漫画列表。</summary>
     public Dictionary<string, List<LocalComic>> Roots { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }
+

@@ -465,4 +465,93 @@ public class LocalLibraryServiceTests
             Directory.Delete(root, true);
         }
     }
+
+    [Fact]
+    public void Scan_ReadsSourceId_From_SourceJson()
+    {
+        var root = CreateTempRoot();
+        try
+        {
+            var albumDir = Path.Combine(root, "绅士作品");
+            Directory.CreateDirectory(Path.Combine(albumDir, "全一册"));
+            WriteFile(Path.Combine(albumDir, LocalLibraryService.SourceMetadataFileName),
+                """{"source_id":"wnacg","comic_id":"12345","title":"绅士作品"}""");
+
+            var comic = Assert.Single(CreateService().Scan(root));
+
+            Assert.Equal("wnacg", comic.SourceId);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void SaveSourceMetadata_Then_GetDownloadedKeys_Matches()
+    {
+        var root = CreateTempRoot();
+        try
+        {
+            var service = CreateService();
+            var detail = new JmComic.Core.Sources.ComicDetail
+            {
+                Id = "987",
+                Title = "测试画廊",
+                Authors = { "作者A" },
+                Tags = { "tag1" },
+            };
+            service.SaveSourceMetadata(root, "hitomi", detail);
+            Directory.CreateDirectory(Path.Combine(root, "测试画廊", "全一册"));
+
+            var keys = service.GetDownloadedKeys(root);
+
+            Assert.Contains("hitomi:987", keys);
+            Assert.Equal("hitomi:987", LocalLibraryService.KeyFor("hitomi", "987"));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void GetDownloadedKeys_FallsBack_To_Jm_For_Legacy_AlbumJson()
+    {
+        var root = CreateTempRoot();
+        try
+        {
+            var albumDir = Path.Combine(root, "禁漫作品");
+            Directory.CreateDirectory(Path.Combine(albumDir, "第1话"));
+            WriteFile(Path.Combine(albumDir, LocalLibraryService.MetadataFileName), """{"id":42,"name":"禁漫作品"}""");
+
+            var keys = CreateService().GetDownloadedKeys(root);
+
+            Assert.Contains("jm:42", keys);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void GetDownloadedKeys_Skips_Dirs_Without_Chapters()
+    {
+        var root = CreateTempRoot();
+        try
+        {
+            var albumDir = Path.Combine(root, "只有元数据");
+            WriteFile(Path.Combine(albumDir, LocalLibraryService.SourceMetadataFileName),
+                """{"source_id":"wnacg","comic_id":"1","title":"只有元数据"}""");
+
+            var keys = CreateService().GetDownloadedKeys(root);
+
+            Assert.Empty(keys);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
 }

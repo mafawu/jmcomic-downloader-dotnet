@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.IO;
 using System.Net.Http;
 using System.Windows.Controls.Primitives;
@@ -36,6 +37,41 @@ public static class ImageLoader
     public static readonly DependencyProperty SourceProperty = DependencyProperty.RegisterAttached(
         "Source", typeof(string), typeof(ImageLoader), new PropertyMetadata(null, OnSourceChanged));
 
+    /// <summary>图片请求附加头（防盗链 Referer 等），与 Source 配合使用。</summary>
+    public static readonly DependencyProperty HeadersProperty = DependencyProperty.RegisterAttached(
+        "Headers", typeof(IReadOnlyDictionary<string, string>), typeof(ImageLoader),
+        new PropertyMetadata(null, OnHeadersChanged));
+
+    private static readonly ConditionalWeakTable<Image, IReadOnlyDictionary<string, string>> HeaderMap = new();
+
+    public static void SetHeaders(DependencyObject element, IReadOnlyDictionary<string, string>? value)
+        => element.SetValue(HeadersProperty, value);
+
+    public static IReadOnlyDictionary<string, string>? GetHeaders(DependencyObject element)
+        => (IReadOnlyDictionary<string, string>?)element.GetValue(HeadersProperty);
+
+    private static void OnHeadersChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not Image image)
+        {
+            return;
+        }
+        if (e.NewValue is IReadOnlyDictionary<string, string> headers)
+        {
+            HeaderMap.Remove(image);
+            HeaderMap.Add(image, headers);
+        }
+        else
+        {
+            HeaderMap.Remove(image);
+        }
+        // 头变化后重新加载（如切换站点）
+        if (e.OldValue != e.NewValue)
+        {
+            OnSourceChanged(d, new DependencyPropertyChangedEventArgs(SourceProperty, null, GetSource(image)));
+        }
+    }
+
     public static void SetSource(DependencyObject element, string? value) => element.SetValue(SourceProperty, value);
 
     public static string? GetSource(DependencyObject element) => (string?)element.GetValue(SourceProperty);
@@ -67,7 +103,7 @@ public static class ImageLoader
             }
             else if (value.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
-                var bytes = await HttpClient.GetByteArrayAsync(value);
+                var bytes = await LoadBytesAsync(value, HeaderMap.TryGetValue(image, out var headers) ? headers : null);
                 bitmap = await Task.Run(() => DecodeBytes(bytes));
             }
             else
@@ -90,6 +126,21 @@ public static class ImageLoader
         }
     }
 
+    /// <summary>网络图片：带可选请求头下载。</summary>
+    private static async Task<byte[]> LoadBytesAsync(string url, IReadOnlyDictionary<string, string>? headers)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (headers is not null)
+        {
+            foreach (var (key, value) in headers)
+            {
+                request.Headers.TryAddWithoutValidation(key, value);
+            }
+        }
+        using var resp = await HttpClient.SendAsync(request);
+        resp.EnsureSuccessStatusCode();
+        return await resp.Content.ReadAsByteArrayAsync();
+    }
     /// <summary>本地图片：带缓存 + 并发限制 + 后台线程解码。</summary>
     private static async Task<BitmapImage?> LoadLocalAsync(string path)
     {
@@ -163,4 +214,5 @@ public static class ImageLoader
         return bitmap;
     }
 }
+
 

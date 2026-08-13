@@ -79,10 +79,18 @@ public partial class LocalSearchPanel : UserControl
         NotifyChanged();
     }
 
+    private void KeywordBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        UpdateInputUi();
+        KeywordBox.CaretIndex = 0;
+    }
+
+    private void KeywordBox_LostFocus(object sender, RoutedEventArgs e) => UpdateInputUi();
+
     private void UpdateInputUi()
     {
         var hasText = !string.IsNullOrEmpty(KeywordBox.Text);
-        PlaceholderText.Visibility = hasText ? Visibility.Collapsed : Visibility.Visible;
+        PlaceholderText.Visibility = hasText || KeywordBox.IsKeyboardFocused ? Visibility.Collapsed : Visibility.Visible;
         ClearButton.Visibility = hasText || _selectedTags.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 

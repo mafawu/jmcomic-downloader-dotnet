@@ -66,7 +66,7 @@
                 </Border>
                 <TextBlock Text="没有找到相关漫画" FontSize="15" FontWeight="SemiBold"
                            Margin="0,16,0,0" HorizontalAlignment="Center" />
-                <TextBlock Text="换个关键词或排序方式再试试吧" FontSize="12"
+                <TextBlock Text="换个关键词再试试吧" FontSize="12"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,6,0,0" HorizontalAlignment="Center" />
                 <Button Style="{StaticResource PillGhostButtonStyle}" Content="重新搜索"
@@ -91,6 +91,34 @@
                 </ItemsControl>
             </ScrollViewer>
         </DataTemplate>
+
+        <!-- 来源筛选 Tab 胶囊 -->
+        <Style x:Key="FilterTabStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FontSize" Value="12.5" />
+            <Setter Property="Padding" Value="12,5" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="999"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBgBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimarySubtleBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <Style x:Key="StateHostStyle" TargetType="ContentControl">
             <Setter Property="ContentTemplate" Value="{StaticResource HintStateTemplate}" />
@@ -118,62 +146,46 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- 搜索栏 -->
+        <!-- 搜索栏：关键词 + 来源筛选 Tab -->
         <Border Grid.Row="0" Style="{StaticResource CardPanelStyle}" Padding="14">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-                <Grid Margin="0,0,10,0">
-                    <TextBox x:Name="KeywordBox" Style="{StaticResource ModernTextBoxStyle}"
-                             MinWidth="120" Padding="34,7,30,7"
-                             KeyDown="KeywordBox_KeyDown"
-                             VerticalContentAlignment="Center"
-                             ToolTip="输入漫画名称 / ID / 作者搜索" />
-                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                               Foreground="{DynamicResource TextDisabledBrush}"
-                               IsHitTestVisible="False" Margin="12,0,0,0"
-                               VerticalAlignment="Center" HorizontalAlignment="Left" />
-                    <TextBlock Text="输入漫画名称 / ID / 作者搜索" FontSize="12.5"
-                               Foreground="{DynamicResource TextDisabledBrush}"
-                               IsHitTestVisible="False" Margin="34,0,0,0"
-                               VerticalAlignment="Center" HorizontalAlignment="Left">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding Text, ElementName=KeywordBox}" Value="">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                    <DataTrigger Binding="{Binding Text, ElementName=KeywordBox}" Value="{x:Null}">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <Button x:Name="ClearKeywordButton" Style="{StaticResource IconButtonStyle}"
-                            ToolTip="清除" Click="ClearKeywordButton_Click"
-                            HorizontalAlignment="Right" Margin="0,0,4,0"
-                            VerticalAlignment="Center" Padding="6" FontSize="12">
-                        <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" />
-                    </Button>
+                    <Grid Margin="0,0,10,0">
+                        <TextBox x:Name="KeywordBox" Style="{StaticResource ModernTextBoxStyle}"
+                                 MinWidth="120" Padding="34,7,30,7"
+                                 KeyDown="KeywordBox_KeyDown"
+                                 GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus"
+                                 TextChanged="KeywordBox_TextChanged"
+                                 VerticalContentAlignment="Center"
+                                 ToolTip="输入漫画名称 / ID / 作者搜索" />
+                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
+                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                   IsHitTestVisible="False" Margin="12,0,0,0"
+                                   VerticalAlignment="Center" HorizontalAlignment="Left" />
+                        <TextBlock x:Name="KeywordPlaceholder" Text="输入漫画名称 / ID / 作者搜索" FontSize="12.5"
+                                   Foreground="{DynamicResource TextDisabledBrush}"
+                                   IsHitTestVisible="False" Margin="34,0,0,0"
+                                   VerticalAlignment="Center" HorizontalAlignment="Left" />
+                        <Button x:Name="ClearKeywordButton" Style="{StaticResource IconButtonStyle}"
+                                ToolTip="清除" Click="ClearKeywordButton_Click"
+                                HorizontalAlignment="Right" Margin="0,0,4,0"
+                                VerticalAlignment="Center" Padding="6" FontSize="12">
+                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" />
+                        </Button>
+                    </Grid>
+
+                    <Button Grid.Column="1" Margin="10,0,0,0"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Content="搜索" Click="SearchButton_Click" />
                 </Grid>
 
-                <ComboBox x:Name="SortBox" Grid.Column="1" Width="130"
-                          SelectionChanged="SortBox_SelectionChanged">
-                    <ComboBoxItem Content="最新发布" Tag="Latest" />
-                    <ComboBoxItem Content="最多观看" Tag="View" />
-                    <ComboBoxItem Content="图片最多" Tag="Picture" />
-                    <ComboBoxItem Content="最多点赞" Tag="Like" />
-                </ComboBox>
-                <Button Grid.Column="2" Margin="10,0,0,0"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Content="搜索" Click="SearchButton_Click" />
-            </Grid>
+                <StackPanel x:Name="SourceTabs" Orientation="Horizontal" Margin="0,12,0,0" />
+            </StackPanel>
         </Border>
 
         <!-- 内容区（按状态切换模板） -->

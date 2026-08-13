@@ -11,6 +11,7 @@ using JmComic.Core.Downloading;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
 using JmComic.Core.Services;
+using JmComic.Core.Sources.Jm;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JmComic.App.Views;
@@ -23,7 +24,10 @@ public partial class CategoryView : UserControl
     private readonly JmHttpClient _client;
     private readonly ConfigService _config;
     private readonly DownloadManager _downloadManager;
+    private readonly LocalLibraryService _localLibrary;
 
+    /// <summary>已下载漫画的 (源,id) 键集合（卡片右上角徽章）。</summary>
+    private HashSet<string> _downloadedKeys = new();
     private SearchSort _sort = SearchSort.Latest;
     private RankPeriod _period = RankPeriod.All;
     private long _total;
@@ -53,6 +57,7 @@ public partial class CategoryView : UserControl
         _client = App.Services.GetRequiredService<JmHttpClient>();
         _config = App.Services.GetRequiredService<ConfigService>();
         _downloadManager = App.Services.GetRequiredService<DownloadManager>();
+        _localLibrary = App.Services.GetRequiredService<LocalLibraryService>();
         SortBox.SelectedIndex = 0;
         PeriodBox.SelectedIndex = 0;
         SidebarPanel.ItemsSource = ThemeCatalog.Sections;
@@ -98,6 +103,25 @@ public partial class CategoryView : UserControl
         {
             _ = LoadAsync(1);
         }
+    }
+
+    private void KeywordBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        UpdateKeywordPlaceholder();
+        KeywordBox.CaretIndex = 0;
+    }
+
+    private void KeywordBox_LostFocus(object sender, RoutedEventArgs e) => UpdateKeywordPlaceholder();
+
+    private void KeywordBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateKeywordPlaceholder();
+
+    /// <summary>占位提示仅在「内容为空且未聚焦」时显示。</summary>
+    private void UpdateKeywordPlaceholder()
+    {
+        KeywordPlaceholder.Visibility =
+            string.IsNullOrEmpty(KeywordBox.Text) && !KeywordBox.IsKeyboardFocused
+                ? Visibility.Visible
+                : Visibility.Collapsed;
     }
 
     private void SearchButton_Click(object sender, RoutedEventArgs e) => _ = LoadAsync(1);
@@ -153,6 +177,7 @@ public partial class CategoryView : UserControl
 
         _keyword = keyword;
         _page = page;
+        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
         SetBusy(true);
         try
         {
@@ -203,11 +228,12 @@ public partial class CategoryView : UserControl
         var id = long.TryParse(item.Id, out var parsed) ? parsed : 0;
         return new AlbumCardViewModel
         {
-            Id = id,
+            Id = item.Id,
             Name = item.Name,
             AuthorText = string.IsNullOrEmpty(item.Author) ? "未知作者" : item.Author,
-            CoverUrl = SearchView.NormalizeCover(id, item.Image),
+            CoverUrl = JmSource.NormalizeCover(id, item.Image),
             IsFavorite = item.IsFavorite,
+            IsDownloaded = _downloadedKeys.Contains(LocalLibraryService.KeyFor("jm", item.Id)),
             OpenCommand = new RelayCommand(_ => Navigation.OpenAlbum(id)),
             DownloadCommand = new AsyncRelayCommand(async _ =>
             {
@@ -253,3 +279,6 @@ public partial class CategoryView : UserControl
         PagingPanel.Visibility = state == State.Result ? Visibility.Visible : Visibility.Collapsed;
     }
 }
+
+
+
