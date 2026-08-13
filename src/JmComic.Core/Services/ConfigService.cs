@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using JmComic.Core.Models;
 
@@ -11,7 +13,13 @@ public class ConfigService
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
+    /// <summary>DPAPI 加密值的标识前缀（当前用户作用域）。</summary>
+    private const string EncryptedPrefix = "DPAPI:v1:";
+
     private readonly string _configPath;
+
+    /// <summary>加载到旧版明文凭据时置位，触发自动迁移为加密存储。</summary>
+    private bool _hasLegacyPlaintext;
 
     public ConfigService(string configPath)
     {
@@ -50,6 +58,22 @@ public class ConfigService
             {
                 config.LocalDirs = new List<string> { config.DownloadDir };
             }
+            config.TitleTranslate ??= new TitleTranslateOptions();
+
+            config.Password = Decrypt(config.Password);
+            config.TitleTranslate.ApiKey = Decrypt(config.TitleTranslate.ApiKey);
+            if (_hasLegacyPlaintext)
+            {
+                // 旧版明文凭据：首次加载后自动迁移为加密存储，避免明文长期落盘。
+                try
+                {
+                    Save(config);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"凭据加密迁移失败: {ex.Message}");
+                }
+            }
             return config;
         }
         catch (Exception ex)
@@ -67,8 +91,79 @@ public class ConfigService
     public void Save(Config config)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(_configPath)!);
-        File.WriteAllText(_configPath, JsonSerializer.Serialize(config, JsonOptions));
+        var translate = config.TitleTranslate ?? new TitleTranslateOptions();
+        var persisted = new Config
+        {
+            ApiDomain = config.ApiDomain,
+            ApiDomains = config.ApiDomains,
+            Username = config.Username,
+            Password = Encrypt(config.Password),
+            DownloadDir = config.DownloadDir,
+            DownloadFormat = config.DownloadFormat,
+            LocalDirs = config.LocalDirs,
+            TitleTranslate = new TitleTranslateOptions
+            {
+                Enabled = translate.Enabled,
+                BaseUrl = translate.BaseUrl,
+                ApiKey = Encrypt(translate.ApiKey),
+                Model = translate.Model,
+            },
+        };
+        File.WriteAllText(_configPath, JsonSerializer.Serialize(persisted, JsonOptions));
+    }
+
+    /// <summary>用 Windows DPAPI（当前用户作用域）加密；非 Windows 或失败时退回明文。</summary>
+    private static string Encrypt(string plaintext)
+    {
+        if (string.IsNullOrEmpty(plaintext))
+        {
+            return "";
+        }
+        if (!OperatingSystem.IsWindows())
+        {
+            return plaintext;
+        }
+        try
+        {
+            var bytes = ProtectedData.Protect(Encoding.UTF8.GetBytes(plaintext), null, DataProtectionScope.CurrentUser);
+            return EncryptedPrefix + Convert.ToBase64String(bytes);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"凭据加密失败，退回明文保存: {ex.Message}");
+            return plaintext;
+        }
+    }
+
+    /// <summary>解密 DPAPI 值；旧版明文原样返回并标记迁移，无法解密时返回空串。</summary>
+    private string Decrypt(string stored)
+    {
+        if (string.IsNullOrEmpty(stored))
+        {
+            return "";
+        }
+        if (!stored.StartsWith(EncryptedPrefix, StringComparison.Ordinal))
+        {
+            _hasLegacyPlaintext = true;
+            return stored;
+        }
+        if (!OperatingSystem.IsWindows())
+        {
+            Console.Error.WriteLine("DPAPI 仅在 Windows 可用，凭据无法解密");
+            return "";
+        }
+        try
+        {
+            var bytes = ProtectedData.Unprotect(
+                Convert.FromBase64String(stored[EncryptedPrefix.Length..]),
+                null,
+                DataProtectionScope.CurrentUser);
+            return Encoding.UTF8.GetString(bytes);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"凭据解密失败（可能来自其他 Windows 用户或已损坏）: {ex.Message}");
+            return "";
+        }
     }
 }
-
-

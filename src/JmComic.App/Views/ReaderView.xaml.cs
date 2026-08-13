@@ -3,11 +3,13 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using JmComic.App.Common;
 using JmComic.Core;
 using JmComic.Core.Models;
+using JmComic.Core.Utils;
 
 namespace JmComic.App.Views;
 
@@ -26,7 +28,7 @@ public partial class ReaderView : UserControl
     private readonly LocalComic _comic;
     private readonly List<string> _chapterDirs = new();
     private readonly Dictionary<string, List<string>> _chapterImages = new();
-    private readonly Dictionary<int, BitmapImage> _loaded = new();
+    private readonly Dictionary<int, BitmapSource> _loaded = new();
     private readonly HashSet<int> _loading = new();
     private readonly List<string> _images = new();
     private double[] _tops = Array.Empty<double>();
@@ -392,13 +394,14 @@ public partial class ReaderView : UserControl
                 }
                 else
                 {
+                    Console.Error.WriteLine($"阅读器图片解码失败: {path}: {t.Exception?.GetBaseException().Message}");
                     RebuildTops();
                     UpdateVisible();
                 }
             }, TaskScheduler.FromCurrentSynchronizationContext());
     }
 
-    private void AttachImage(int index, BitmapImage bitmap)
+    private void AttachImage(int index, BitmapSource bitmap)
     {
         if (index >= ImageStack.Children.Count)
         {
@@ -489,17 +492,39 @@ public partial class ReaderView : UserControl
         return lo;
     }
 
-    private static BitmapImage DecodeImage(string path, int decodeWidth)
+    private static BitmapSource DecodeImage(string path, int decodeWidth)
     {
-        using var stream = File.OpenRead(path);
-        var bitmap = new BitmapImage();
-        bitmap.BeginInit();
-        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-        bitmap.DecodePixelWidth = decodeWidth;
-        bitmap.StreamSource = stream;
-        bitmap.EndInit();
-        bitmap.Freeze();
-        return bitmap;
+        // 优先使用系统 WIC 直读（Windows 11 原生支持 webp，零转码开销）
+        try
+        {
+            using var stream = File.OpenRead(path);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.DecodePixelWidth = decodeWidth;
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
+        }
+        catch
+        {
+            // 系统缺少解码器（如旧版 Windows 无 webp）：仅 webp 走 ImageSharp 像素拷贝兜底
+            if (!string.Equals(Path.GetExtension(path), ".webp", StringComparison.OrdinalIgnoreCase))
+            {
+                throw;
+            }
+            var decoded = WebpImageDecoder.Decode(path, decodeWidth);
+            if (decoded is null)
+            {
+                throw;
+            }
+            var source = BitmapSource.Create(
+                decoded.Width, decoded.Height, 96, 96, PixelFormats.Bgra32, null,
+                decoded.BgraPixels, decoded.Width * 4);
+            source.Freeze();
+            return source;
+        }
     }
 
     // ====================== 页码 / 返回 ======================
@@ -761,4 +786,6 @@ public static class ReadingProgress
         }
     }
 }
+
+
 
