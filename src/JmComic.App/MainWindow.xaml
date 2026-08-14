@@ -6,29 +6,40 @@
         xmlns:controls="clr-namespace:JmComic.App.Controls"
         Title="禁漫天堂下载器"
         Width="1280" Height="800"
-        MinWidth="1024" MinHeight="680"
+        MinWidth="1080" MinHeight="680"
         WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource AppBackgroundBrush}"
         WindowStyle="None"
         ResizeMode="CanResize"
         StateChanged="Window_StateChanged">
     <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="52"
+        <WindowChrome CaptionHeight="48"
                       ResizeBorderThickness="6"
                       GlassFrameThickness="0"
                       CornerRadius="0"
                       UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
+    <Window.Background>
+        <DynamicResource ResourceKey="AppBackgroundBrush" />
+    </Window.Background>
+
+    <!-- 淡雅外框：窗口由 DWM 圆角（8px），边框圆角略小（6px）保证弧线处边框完整 -->
+    <Border BorderBrush="{DynamicResource WindowBorderBrush}"
+            BorderThickness="1.5" CornerRadius="6"
+            Padding="0" Margin="0"
+            Background="{DynamicResource AppBackgroundBrush}"
+            ClipToBounds="True">
+        <Border CornerRadius="5" ClipToBounds="True"
+                Background="{DynamicResource AppBackgroundBrush}">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 顶部应用栏 -->
+        <!-- 顶部应用栏：品牌 + 源切换 + 操作区 + 窗口控制 -->
         <Border Grid.Row="0" Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1"
-                Padding="18,9,0,9">
+                Padding="18,7,0,7">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -39,156 +50,209 @@
 
                 <!-- 品牌 -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource PrimaryBrush}">
-                        <TextBlock Text="JM" Foreground="White" FontSize="13" FontWeight="Bold"
+                    <Border Width="32" Height="32" CornerRadius="10"
+                            Effect="{StaticResource CardShadowEffect}">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="{DynamicResource PrimaryGradientStartColor}" Offset="0" />
+                                <GradientStop Color="{DynamicResource PrimaryGradientEndColor}" Offset="1" />
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <TextBlock Text="JM" Foreground="White" FontSize="12" FontWeight="Bold"
                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="JM 下载器" FontSize="14" FontWeight="Bold" />
-                        <TextBlock Text="禁漫天堂漫画下载" FontSize="10"
-                                   Foreground="{DynamicResource TextSecondaryBrush}" />
-                    </StackPanel>
-                    <ComboBox x:Name="SourceBox" Width="132" Margin="14,0,0,0"
+                    <TextBlock Text="JM 下载器" FontSize="14" FontWeight="Bold"
+                               Margin="10,0,0,0" VerticalAlignment="Center" />
+                    <ComboBox x:Name="SourceBox" Width="132" Margin="16,0,0,0"
                               VerticalAlignment="Center" FontSize="12"
                               shell:WindowChrome.IsHitTestVisibleInChrome="True"
                               SelectionChanged="SourceBox_SelectionChanged" />
                 </StackPanel>
 
-                <!-- 导航（分段容器：发现 / 我的 两组） -->
-                <Border Grid.Column="1" CornerRadius="8" Background="{DynamicResource HoverBgBrush}"
-                        Padding="2" Margin="28,0,0,0" VerticalAlignment="Center"
-                        shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                    <StackPanel Orientation="Horizontal">
-                        <!-- 发现 -->
-                        <RadioButton x:Name="NavSearch" GroupName="Nav"
-                                     Style="{StaticResource NavItemStyle}" IsChecked="True"
-                                     Click="Nav_Checked">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
-                                <TextBlock Text="搜索" Margin="8,0,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavRank" GroupName="Nav"
-                                     Style="{StaticResource NavItemStyle}"
-                                     Click="Nav_Checked">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE9D9;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
-                                <TextBlock Text="排行" Margin="8,0,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavCategory" GroupName="Nav"
-                                     Style="{StaticResource NavItemStyle}"
-                                     Click="Nav_Checked">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
-                                <TextBlock Text="分类" Margin="8,0,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavWeekly" GroupName="Nav"
-                                     Style="{StaticResource NavItemStyle}"
-                                     Click="Nav_Checked">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8F1;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
-                                <TextBlock Text="每周必看" Margin="8,0,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <!-- 分隔 -->
-                        <Border Width="1" Height="20" Background="{DynamicResource DividerBrush}"
-                                Margin="6,0" VerticalAlignment="Center" />
-                        <!-- 我的 -->
-                        <RadioButton x:Name="NavLocal" GroupName="Nav"
-                                     Style="{StaticResource NavItemStyle}"
-                                     Click="Nav_Checked">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
-                                <TextBlock Text="本地" Margin="8,0,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                        <RadioButton x:Name="NavFavorite" GroupName="Nav"
-                                     Style="{StaticResource NavItemStyle}"
-                                     Click="Nav_Checked">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xE734;" FontFamily="Segoe MDL2 Assets" FontSize="14" />
-                                <TextBlock Text="收藏" Margin="8,0,0,0" />
-                            </StackPanel>
-                        </RadioButton>
-                    </StackPanel>
-                </Border>
-
                 <!-- 操作区 -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right"
+                            VerticalAlignment="Center" Margin="0,0,10,0"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button Style="{StaticResource IconButtonStyle}" ToolTip="设置"
                             Click="Settings_Click">
-                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconSetting}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Stretch="Uniform" Width="16" Height="16" />
                     </Button>
                     <Button Style="{StaticResource IconButtonStyle}" ToolTip="打开配置目录" Margin="4,0,0,0"
                             Click="OpenConfigDir_Click">
-                        <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconFolderOpen}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Stretch="Uniform" Width="16" Height="16" />
                     </Button>
                     <Button x:Name="ThemeButton" Style="{StaticResource IconButtonStyle}"
                             ToolTip="切换深浅色主题" Margin="4,0,0,0"
                             Click="ThemeToggle_Click">
-                        <TextBlock x:Name="ThemeIcon" FontFamily="Segoe MDL2 Assets" />
+                        <Path x:Name="ThemeIcon"
+                              Data="{StaticResource IconMoon}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Stretch="Uniform" Width="16" Height="16" />
                     </Button>
                     <Button x:Name="PanelToggleButton" Style="{StaticResource IconButtonStyle}"
                             ToolTip="显示/隐藏侧栏" Margin="4,0,0,0"
                             Click="PanelToggle_Click">
-                        <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconPanelToggle}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Stretch="Uniform" Width="16" Height="16" />
                     </Button>
-                    <Border x:Name="LoginArea" Margin="14,0,0,0" />
+                    <Border x:Name="LoginArea" Margin="12,0,0,0" />
                 </StackPanel>
 
-                <!-- 窗口控制：贴右上角，占满标题栏高度 -->
+                <!-- 窗口控制 -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Stretch"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Border Width="1" Height="18" Background="{DynamicResource DividerBrush}"
-                            VerticalAlignment="Center" Margin="10,0,8,0" />
+                            VerticalAlignment="Center" Margin="8,0,8,0" />
                     <Button x:Name="MinimizeButton" Style="{StaticResource WindowButtonStyle}"
                             ToolTip="最小化" Click="MinimizeButton_Click">
-                        <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconMinimize}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Stretch="Uniform" Width="13" Height="13" />
                     </Button>
                     <Button x:Name="MaximizeButton" Style="{StaticResource WindowButtonStyle}"
                             ToolTip="最大化" Click="MaximizeButton_Click">
-                        <TextBlock x:Name="MaximizeIcon" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" />
+                        <Path x:Name="MaximizeIcon"
+                              Data="{StaticResource IconMaximize}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                              Stretch="Uniform" Width="13" Height="13" />
                     </Button>
                     <Button Style="{StaticResource WindowCloseButtonStyle}"
                             ToolTip="关闭" Click="CloseButton_Click">
-                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconCloseWindow}"
+                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                              StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                              Stretch="Uniform" Width="13" Height="13" />
                     </Button>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- 主体 -->
+        <!-- 主体：左侧导航栏 + 内容区 + 右侧面板 -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition x:Name="PanelColumn" Width="344" MinWidth="300" MaxWidth="420" />
+                <ColumnDefinition x:Name="PanelColumn" Width="348" MinWidth="300" MaxWidth="440" />
             </Grid.ColumnDefinitions>
 
-            <ContentControl x:Name="PageHost" Grid.Column="0" />
+            <!-- 左侧霓虹导航栏 -->
+            <Border Grid.Column="0" Width="196" Margin="14,14,0,14"
+                    Background="{DynamicResource SurfaceBrush}"
+                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                    CornerRadius="18" Padding="10,12"
+                    Effect="{StaticResource CardShadowEffect}">
+                <StackPanel>
+                    <!-- 发现 -->
+                    <TextBlock Text="发现" FontSize="10.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextDisabledBrush}"
+                               Margin="12,4,0,6" />
+                    <RadioButton x:Name="NavSearch" GroupName="Nav"
+                                 Style="{StaticResource NavItemStyle}" IsChecked="True"
+                                 Click="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconSearch}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Width="16" Height="16" Margin="3,0,0,0" />
+                            <TextBlock Text="搜索" Margin="11,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavRank" GroupName="Nav"
+                                 Style="{StaticResource NavItemStyle}"
+                                 Click="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconRank}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Width="16" Height="16" Margin="3,0,0,0" />
+                            <TextBlock Text="排行" Margin="11,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavCategory" GroupName="Nav"
+                                 Style="{StaticResource NavItemStyle}"
+                                 Click="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconCategory}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Width="16" Height="16" Margin="3,0,0,0" />
+                            <TextBlock Text="分类" Margin="11,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavWeekly" GroupName="Nav"
+                                 Style="{StaticResource NavItemStyle}"
+                                 Click="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconWeekly}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Width="16" Height="16" Margin="3,0,0,0" />
+                            <TextBlock Text="每周必看" Margin="11,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
 
-            <GridSplitter x:Name="PanelSplitter" Grid.Column="1" Width="5"
+                    <!-- 分隔 -->
+                    <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="8,10" />
+
+                    <!-- 我的 -->
+                    <TextBlock Text="我的" FontSize="10.5" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextDisabledBrush}"
+                               Margin="12,4,0,6" />
+                    <RadioButton x:Name="NavLocal" GroupName="Nav"
+                                 Style="{StaticResource NavItemStyle}"
+                                 Click="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconLibrary}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Width="16" Height="16" Margin="3,0,0,0" />
+                            <TextBlock Text="本地" Margin="11,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="NavFavorite" GroupName="Nav"
+                                 Style="{StaticResource NavItemStyle}"
+                                 Click="Nav_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconFavoriteStar}"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}"
+                                  StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round"
+                                  Stretch="Uniform" Width="16" Height="16" Margin="3,0,0,0" />
+                            <TextBlock Text="收藏" Margin="11,0,0,0" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                </StackPanel>
+            </Border>
+
+            <!-- 内容区 -->
+            <ContentControl x:Name="PageHost" Grid.Column="1" Margin="0,0,0,0" />
+
+            <GridSplitter x:Name="PanelSplitter" Grid.Column="2" Width="5"
                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                           Background="Transparent" ShowsPreview="True" />
 
-            <views:DownloadPanel x:Name="DownloadPanelView" Grid.Column="2" />
-            <views:ComicDetailPanel x:Name="DetailPanelView" Grid.Column="2" Visibility="Collapsed" />
-            <views:LocalSearchPanel x:Name="SearchPanelView" Grid.Column="2" Visibility="Collapsed" />
-            <views:LocalComicDetailPanel x:Name="LocalDetailPanelView" Grid.Column="2" Visibility="Collapsed" />
+            <views:DownloadPanel x:Name="DownloadPanelView" Grid.Column="3" />
+            <views:ComicDetailPanel x:Name="DetailPanelView" Grid.Column="3" Visibility="Collapsed" />
+            <views:LocalSearchPanel x:Name="SearchPanelView" Grid.Column="3" Visibility="Collapsed" />
+            <views:LocalComicDetailPanel x:Name="LocalDetailPanelView" Grid.Column="3" Visibility="Collapsed" />
 
-            <controls:SnackbarHost x:Name="Snackbars" Grid.Column="0"
+            <controls:SnackbarHost x:Name="Snackbars" Grid.Column="1"
                                    HorizontalAlignment="Right" VerticalAlignment="Bottom"
                                    Margin="0,0,12,18" Panel.ZIndex="100" />
         </Grid>
 
     </Grid>
+        </Border>
+    </Border>
 </Window>
-
-
-
-
-
-

@@ -384,13 +384,13 @@ public partial class ChapterView : UserControl
         if (_isFavorite)
         {
             FavoriteButton.Style = (Style)FindResource("PrimaryButtonStyle");
-            FavoriteIcon.Foreground = Brushes.White;
+            FavoriteIcon.Stroke = Brushes.White;
             FavoriteText.Foreground = Brushes.White;
         }
         else
         {
             FavoriteButton.Style = (Style)FindResource("GhostButtonStyle");
-            FavoriteIcon.Foreground = (Brush)FindResource("TextSecondaryBrush");
+            FavoriteIcon.Stroke = (Brush)FindResource("TextSecondaryBrush");
             FavoriteText.Foreground = (Brush)FindResource("TextPrimaryBrush");
         }
     }

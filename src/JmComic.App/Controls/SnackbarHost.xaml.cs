@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 using JmComic.App.Services;
 using JmComic.App.Themes;
@@ -11,8 +12,6 @@ namespace JmComic.App.Controls;
 /// <summary>右下角轻量通知条宿主。</summary>
 public partial class SnackbarHost : UserControl
 {
-    private static readonly FontFamily IconFont = new("Segoe MDL2 Assets");
-
     public SnackbarHost()
     {
         InitializeComponent();
@@ -42,12 +41,17 @@ public partial class SnackbarHost : UserControl
             MaxWidth = 420,
         };
         var panel = new StackPanel { Orientation = Orientation.Horizontal };
-        var icon = new TextBlock
+        var icon = new Path
         {
-            Text = glyph,
-            FontFamily = IconFont,
-            FontSize = 13,
-            Foreground = accent,
+            Data = glyph,
+            Stroke = accent,
+            StrokeThickness = 1.8,
+            StrokeStartLineCap = PenLineCap.Round,
+            StrokeEndLineCap = PenLineCap.Round,
+            StrokeLineJoin = PenLineJoin.Round,
+            Stretch = Stretch.Uniform,
+            Width = 15,
+            Height = 15,
             VerticalAlignment = VerticalAlignment.Center,
         };
         var text = new TextBlock

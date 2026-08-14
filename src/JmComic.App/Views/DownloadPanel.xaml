@@ -10,11 +10,9 @@
         </Grid.RowDefinitions>
 
         <!-- 标题栏 -->
-        <Grid Grid.Row="0" Margin="16,14,16,10">
+        <Grid Grid.Row="0" Margin="18,16,18,12">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                           Foreground="{DynamicResource PrimaryBrush}"
-                           VerticalAlignment="Center" />
+                <Path Data="{StaticResource IconDownload}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="14" Height="14" VerticalAlignment="Center" />
                 <TextBlock Text="下载队列" FontSize="15" FontWeight="Bold"
                            Margin="8,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
@@ -24,13 +22,13 @@
         </Grid>
 
         <!-- 全局进度 -->
-        <Border Grid.Row="1" Margin="12,0,12,10" Padding="12,10" CornerRadius="12"
+        <Border Grid.Row="1" Margin="14,0,14,12" Padding="14,12" CornerRadius="20"
                 Background="{DynamicResource SurfaceBrush}"
                 BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
             <Border.Style>
                 <Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
-                    <Setter Property="Margin" Value="12,0,12,10" />
-                    <Setter Property="Padding" Value="12,10" />
+                    <Setter Property="Margin" Value="14,0,14,12" />
+                    <Setter Property="Padding" Value="14,12" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding AllDone}" Value="True">
                             <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
@@ -45,10 +43,10 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="{Binding OverallProgress, StringFormat={}{0:0}%}"
-                               FontSize="22" FontWeight="Bold" FontFamily="Consolas"
+                               FontSize="24" FontWeight="Bold" FontFamily="Consolas"
                                Foreground="{DynamicResource PrimaryBrush}" />
                 </StackPanel>
-                <StackPanel Grid.Column="1" Margin="14,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding ProgressSummary}" FontSize="11"
                                Foreground="{DynamicResource TextSecondaryBrush}">
                         <TextBlock.Style>
@@ -62,7 +60,7 @@
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    <ProgressBar Height="6" Margin="0,8,0,0"
+                    <ProgressBar Height="7" Margin="0,9,0,0"
                                  Value="{Binding OverallProgress, Mode=OneWay}">
                         <ProgressBar.Style>
                             <Style TargetType="ProgressBar" BasedOn="{StaticResource ModernProgressBarStyle}">
@@ -81,31 +79,29 @@
         <!-- 任务列表 -->
         <Grid Grid.Row="2">
             <StackPanel x:Name="EmptyHint" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Border Width="56" Height="56" CornerRadius="16"
+                <Border Width="72" Height="72" CornerRadius="24"
                         Background="{DynamicResource PrimarySubtleBrush}">
-                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="24"
-                               Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconDownload}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
-                <TextBlock Text="暂无下载任务" FontSize="13" FontWeight="SemiBold"
-                           Margin="0,14,0,0" HorizontalAlignment="Center" />
-                <TextBlock Text="在章节页选择章节即可下载" FontSize="11"
+                <TextBlock Text="暂无下载任务" FontSize="13.5" FontWeight="SemiBold"
+                           Margin="0,16,0,0" HorizontalAlignment="Center" />
+                <TextBlock Text="在章节页选择章节即可下载" FontSize="11.5"
                            Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="0,5,0,0" HorizontalAlignment="Center" />
+                           Margin="0,6,0,0" HorizontalAlignment="Center" />
             </StackPanel>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="12,0,12,12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,0,14,14">
                 <ItemsControl x:Name="TaskItems">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8"
-                                    Padding="12,10" CornerRadius="12">
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10"
+                                    Padding="14,12" CornerRadius="16">
                                 <StackPanel>
                                     <Grid>
                                         <TextBlock Text="{Binding DisplayTitle}"
                                                    FontSize="12" FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"
-                                                   MaxWidth="220" VerticalAlignment="Center" />
+                                                   MaxWidth="210" VerticalAlignment="Center" />
                                         <Border x:Name="StatusBadge"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 HorizontalAlignment="Right" Margin="8,0,0,0">
@@ -114,13 +110,13 @@
                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                         </Border>
                                     </Grid>
-                                    <ProgressBar x:Name="ItemProgress" Height="4" Margin="0,8,0,0"
+                                    <ProgressBar x:Name="ItemProgress" Height="5" Margin="0,9,0,0"
                                                  Visibility="Collapsed"
                                                  Value="{Binding Progress, Mode=OneWay}" />
                                     <TextBlock Text="{Binding ProgressText}"
                                                FontSize="10.5" FontFamily="Consolas"
                                                Foreground="{DynamicResource TextDisabledBrush}"
-                                               Margin="0,4,0,0" />
+                                               Margin="0,5,0,0" />
                                 </StackPanel>
                             </Border>
                             <DataTemplate.Triggers>

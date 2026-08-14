@@ -6,17 +6,15 @@
         <!-- 提示态：图标 + 主文案 + 副文案 -->
         <DataTemplate x:Key="HintStateTemplate">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Border Width="72" Height="72" CornerRadius="20"
+                <Border Width="80" Height="80" CornerRadius="26"
                         Background="{DynamicResource PrimarySubtleBrush}">
-                    <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="30"
-                               Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconSearch}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="32" Height="32" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
-                <TextBlock Text="输入关键词，开始探索" FontSize="15" FontWeight="SemiBold"
-                           Margin="0,18,0,0" HorizontalAlignment="Center" />
-                <TextBlock Text="支持漫画名称 / ID / 作者搜索，回车或点击搜索按钮" FontSize="12"
+                <TextBlock Text="输入关键词，开始探索" FontSize="16" FontWeight="SemiBold"
+                           Margin="0,20,0,0" HorizontalAlignment="Center" />
+                <TextBlock Text="支持漫画名称 / ID / 作者搜索，回车或点击搜索按钮" FontSize="12.5"
                            Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="0,6,0,0" HorizontalAlignment="Center" />
+                           Margin="0,8,0,0" HorizontalAlignment="Center" />
             </StackPanel>
         </DataTemplate>
 
@@ -25,7 +23,7 @@
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <StackPanel Orientation="Horizontal">
                     <StackPanel Margin="0,0,14,0">
-                        <Border Width="168" Height="222" CornerRadius="14"
+                        <Border Width="168" Height="222" CornerRadius="20"
                                 Background="{DynamicResource SkeletonBrush}" />
                         <Border Height="13" CornerRadius="6" Margin="0,10,40,0"
                                 Background="{DynamicResource SkeletonBrush}" />
@@ -33,7 +31,7 @@
                                 Background="{DynamicResource SkeletonBrush}" />
                     </StackPanel>
                     <StackPanel Margin="0,0,14,0">
-                        <Border Width="168" Height="222" CornerRadius="14"
+                        <Border Width="168" Height="222" CornerRadius="20"
                                 Background="{DynamicResource SkeletonBrush}" />
                         <Border Height="13" CornerRadius="6" Margin="0,10,40,0"
                                 Background="{DynamicResource SkeletonBrush}" />
@@ -41,7 +39,7 @@
                                 Background="{DynamicResource SkeletonBrush}" />
                     </StackPanel>
                     <StackPanel>
-                        <Border Width="168" Height="222" CornerRadius="14"
+                        <Border Width="168" Height="222" CornerRadius="20"
                                 Background="{DynamicResource SkeletonBrush}" />
                         <Border Height="13" CornerRadius="6" Margin="0,10,40,0"
                                 Background="{DynamicResource SkeletonBrush}" />
@@ -58,11 +56,9 @@
         <!-- 空态：图标 + 文案 + 重试 -->
         <DataTemplate x:Key="EmptyStateTemplate">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Border Width="64" Height="64" CornerRadius="18"
+                <Border Width="72" Height="72" CornerRadius="24"
                         Background="{DynamicResource HoverBgBrush}">
-                    <TextBlock Text="&#xE783;" FontFamily="Segoe MDL2 Assets" FontSize="26"
-                               Foreground="{DynamicResource TextDisabledBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconDocument}" Stroke="{DynamicResource TextDisabledBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <TextBlock Text="没有找到相关漫画" FontSize="15" FontWeight="SemiBold"
                            Margin="0,16,0,0" HorizontalAlignment="Center" />
@@ -139,7 +135,7 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="16">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -147,7 +143,7 @@
         </Grid.RowDefinitions>
 
         <!-- 搜索栏：关键词 + 来源筛选 Tab -->
-        <Border Grid.Row="0" Style="{StaticResource CardPanelStyle}" Padding="14">
+        <Border Grid.Row="0" Style="{StaticResource CardPanelStyle}" Padding="16">
             <StackPanel>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -157,25 +153,22 @@
 
                     <Grid Margin="0,0,10,0">
                         <TextBox x:Name="KeywordBox" Style="{StaticResource ModernTextBoxStyle}"
-                                 MinWidth="120" Padding="34,7,30,7"
+                                 MinWidth="120" Padding="36,9,30,9"
                                  KeyDown="KeywordBox_KeyDown"
                                  GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus"
                                  TextChanged="KeywordBox_TextChanged"
                                  VerticalContentAlignment="Center"
                                  ToolTip="输入漫画名称 / ID / 作者搜索" />
-                        <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                                   Foreground="{DynamicResource TextDisabledBrush}"
-                                   IsHitTestVisible="False" Margin="12,0,0,0"
-                                   VerticalAlignment="Center" HorizontalAlignment="Left" />
+                        <Path Data="{StaticResource IconSearch}" Stroke="{DynamicResource TextDisabledBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="15" Height="15" Margin="13,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
                         <TextBlock x:Name="KeywordPlaceholder" Text="输入漫画名称 / ID / 作者搜索" FontSize="12.5"
                                    Foreground="{DynamicResource TextDisabledBrush}"
-                                   IsHitTestVisible="False" Margin="34,0,0,0"
+                                   IsHitTestVisible="False" Margin="36,0,0,0"
                                    VerticalAlignment="Center" HorizontalAlignment="Left" />
                         <Button x:Name="ClearKeywordButton" Style="{StaticResource IconButtonStyle}"
                                 ToolTip="清除" Click="ClearKeywordButton_Click"
                                 HorizontalAlignment="Right" Margin="0,0,4,0"
-                                VerticalAlignment="Center" Padding="6" FontSize="12">
-                            <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" />
+                                VerticalAlignment="Center" Padding="7" FontSize="12">
+                            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                         </Button>
                     </Grid>
 
@@ -183,13 +176,14 @@
                                 VerticalAlignment="Center">
                         <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                  VerticalAlignment="Center" />
-                        <Button Margin="10,0,0,0"
+                        <Button Margin="12,0,0,0"
                                 Style="{StaticResource PrimaryButtonStyle}"
+                                Padding="22,9"
                                 Content="搜索" Click="SearchButton_Click" />
                     </StackPanel>
                 </Grid>
 
-                <StackPanel x:Name="SourceTabs" Orientation="Horizontal" Margin="0,12,0,0" />
+                <StackPanel x:Name="SourceTabs" Orientation="Horizontal" Margin="0,14,0,0" />
             </StackPanel>
         </Border>
 
@@ -203,7 +197,7 @@
                 <StackPanel Orientation="Horizontal">
                     <Button x:Name="PrevButton" Style="{StaticResource PaginationButtonStyle}"
                             ToolTip="上一页" Click="PrevButton_Click">
-                        <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconChevronLeft}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                     </Button>
                     <Border Style="{StaticResource CountBadgeStyle}" Margin="4,0"
                             MinWidth="84">
@@ -213,7 +207,7 @@
                     </Border>
                     <Button x:Name="NextButton" Style="{StaticResource PaginationButtonStyle}"
                             ToolTip="下一页" Click="NextButton_Click">
-                        <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" />
+                        <Path Data="{StaticResource IconChevronRight}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                     </Button>
                 </StackPanel>
             </Border>

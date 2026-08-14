@@ -10,16 +10,17 @@
     <Border Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource CardBorderBrush}"
             BorderThickness="1"
-            CornerRadius="16"
+            CornerRadius="22"
             Padding="26,22"
-            Margin="12">
+            Margin="14"
+            Effect="{StaticResource CardShadowEffect}">
         <StackPanel>
             <Grid>
                 <TextBlock Text="管理本地路径" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
                 <Button Style="{StaticResource IconButtonStyle}"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
                         Click="CloseButton_Click" ToolTip="关闭">
-                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" />
+                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                 </Button>
             </Grid>
             <TextBlock Text="本地模式将从这些目录中扫描已下载的漫画（每个一级子目录视为一部漫画，.下载中- 开头的临时目录会被跳过）"
@@ -54,7 +55,7 @@
                                             </Style.Triggers>
                                         </Style>
                                     </Button.Style>
-                                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="12" />
+                                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="12" Height="12" />
                                 </Button>
                             </Grid>
                         </DataTemplate>

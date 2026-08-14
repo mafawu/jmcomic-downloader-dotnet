@@ -14,11 +14,9 @@
         <!-- 空态 -->
         <DataTemplate x:Key="EmptyStateTemplate">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Border Width="64" Height="64" CornerRadius="18"
+                <Border Width="72" Height="72" CornerRadius="24"
                         Background="{DynamicResource HoverBgBrush}">
-                    <TextBlock Text="&#xE783;" FontFamily="Segoe MDL2 Assets" FontSize="26"
-                               Foreground="{DynamicResource TextDisabledBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconDocument}" Stroke="{DynamicResource TextDisabledBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <TextBlock Text="该分类暂时没有漫画" FontSize="15" FontWeight="SemiBold"
                            Margin="0,16,0,0" HorizontalAlignment="Center" />
@@ -89,23 +87,21 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid Margin="16">
+    <Grid Margin="20">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="240" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- 左侧：分类列表 -->
-        <Border Grid.Column="0" Style="{StaticResource CardPanelStyle}" Padding="14" Margin="0,0,12,0">
+        <Border Grid.Column="0" Style="{StaticResource CardPanelStyle}" Padding="16" Margin="0,0,12,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                               Foreground="{DynamicResource PrimaryBrush}"
-                               VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <Path Data="{StaticResource IconCategory}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="14" Height="14" Margin="0,0,8,0" VerticalAlignment="Center" />
                     <TextBlock x:Name="CategoryTitle" Text="分类" FontSize="14" FontWeight="SemiBold"
                                VerticalAlignment="Center" />
                 </StackPanel>
@@ -127,9 +123,7 @@
             <!-- 页头：标题 + 分格 -->
             <Grid Grid.Row="0" Margin="0,0,0,12">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                               Foreground="{DynamicResource PrimaryBrush}"
-                               VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <Path Data="{StaticResource IconCategory}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="14" Height="14" Margin="0,0,8,0" VerticalAlignment="Center" />
                     <TextBlock Text="分类浏览" FontSize="15" FontWeight="SemiBold"
                                VerticalAlignment="Center" />
                 </StackPanel>
@@ -145,7 +139,7 @@
                     <StackPanel Orientation="Horizontal">
                         <Button x:Name="PrevButton" Style="{StaticResource PaginationButtonStyle}"
                                 ToolTip="上一页" Click="PrevButton_Click">
-                            <TextBlock Text="&#xE76B;" FontFamily="Segoe MDL2 Assets" />
+                            <Path Data="{StaticResource IconChevronLeft}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                         </Button>
                         <Border Style="{StaticResource CountBadgeStyle}" Margin="4,0" MinWidth="84">
                             <TextBlock x:Name="PageText" FontSize="12.5"
@@ -154,7 +148,7 @@
                         </Border>
                         <Button x:Name="NextButton" Style="{StaticResource PaginationButtonStyle}"
                                 ToolTip="下一页" Click="NextButton_Click">
-                            <TextBlock Text="&#xE76C;" FontFamily="Segoe MDL2 Assets" />
+                            <Path Data="{StaticResource IconChevronRight}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                         </Button>
                     </StackPanel>
                 </Border>

@@ -9,24 +9,24 @@
         </Grid.RowDefinitions>
 
         <!-- 头部 -->
-        <Border Grid.Row="0" Style="{StaticResource CardPanelStyle}" Margin="16,16,16,0" Padding="16">
+        <Border Grid.Row="0" Style="{StaticResource CardPanelStyle}" Margin="20,20,20,0" Padding="18">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <Grid>
-                    <Border Width="72" Height="96" CornerRadius="10" Background="{DynamicResource HoverBgBrush}" />
+                    <Border Width="72" Height="96" CornerRadius="14" Background="{DynamicResource HoverBgBrush}" />
                     <Image x:Name="CoverImage" Width="72" Height="96" Stretch="UniformToFill" />
                 </Grid>
-                <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                <StackPanel Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
                     <Grid>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Style="{StaticResource IconButtonStyle}" ToolTip="返回"
                                     Click="BackButton_Click">
-                                <TextBlock Text="&#xE72B;" FontFamily="Segoe MDL2 Assets" FontSize="15" />
+                                <Path Data="{StaticResource IconBack}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="15" Height="15" />
                             </Button>
-                            <TextBlock x:Name="HeaderTitle" FontSize="17" FontWeight="Bold"
+                            <TextBlock x:Name="HeaderTitle" FontSize="18" FontWeight="Bold"
                                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                                        MaxWidth="520" />
                         </StackPanel>
@@ -38,8 +38,7 @@
                                 HorizontalAlignment="Right" VerticalAlignment="Center"
                                 Click="FavoriteButton_Click">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock x:Name="FavoriteIcon" Text="&#xEB51;"
-                                           FontFamily="Segoe MDL2 Assets" FontSize="13" />
+                                <Path x:Name="FavoriteIcon" Data="{StaticResource IconHeart}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="13" Height="13" />
                                 <TextBlock x:Name="FavoriteText" Text="收藏" Margin="6,0,0,0" />
                             </StackPanel>
                         </Button>
@@ -47,17 +46,17 @@
                     </Grid>
                     <TextBlock x:Name="HeaderMeta" FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"
-                               Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
+                               Margin="0,9,0,0" TextTrimming="CharacterEllipsis" />
                     <TextBlock x:Name="HeaderDesc" FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                TextWrapping="Wrap" MaxHeight="36" TextTrimming="CharacterEllipsis"
-                               Margin="0,8,0,0" />
+                               Margin="0,9,0,0" />
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- 章节区（框选） -->
-        <Grid Grid.Row="1" Margin="16,12,16,0" x:Name="ChaptersLayer"
+        <Grid Grid.Row="1" Margin="20,14,20,0" x:Name="ChaptersLayer"
               PreviewMouseLeftButtonDown="ChaptersLayer_PreviewMouseLeftButtonDown"
               PreviewMouseMove="ChaptersLayer_PreviewMouseMove"
               PreviewMouseLeftButtonUp="ChaptersLayer_PreviewMouseLeftButtonUp">
@@ -80,8 +79,8 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border x:Name="Card" Width="158" Height="52" Margin="0,0,10,10"
-                                    CornerRadius="10"
+                            <Border x:Name="Card" Width="158" Height="54" Margin="0,0,10,10"
+                                    CornerRadius="14"
                                     Background="{DynamicResource SurfaceBrush}"
                                     BorderBrush="{DynamicResource CardBorderBrush}"
                                     BorderThickness="1"
@@ -118,7 +117,7 @@
                                             HorizontalAlignment="Right" VerticalAlignment="Center"
                                             Margin="0,0,4,0" ToolTip="在线阅读本章"
                                             Command="{Binding ReadCommand}">
-                                        <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="12" />
+                                        <Path Data="{StaticResource IconPlay}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="12" Height="12" />
                                     </Button>
                                     <Border x:Name="SelectedCheck" Width="18" Height="18" CornerRadius="9"
                                             Background="{DynamicResource PrimaryBrush}"
@@ -167,7 +166,7 @@
         </Grid>
 
         <!-- 底部操作栏 -->
-        <Border Grid.Row="2" Style="{StaticResource CardPanelStyle}" Margin="16,0,16,16" Padding="14,10">
+        <Border Grid.Row="2" Style="{StaticResource CardPanelStyle}" Margin="20,0,20,20" Padding="16,12">
             <Grid>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock x:Name="SelectedText" Text="未选择章节" FontSize="12.5"

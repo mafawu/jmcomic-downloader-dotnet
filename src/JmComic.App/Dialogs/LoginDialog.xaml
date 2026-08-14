@@ -10,16 +10,17 @@
     <Border Background="{DynamicResource SurfaceBrush}"
             BorderBrush="{DynamicResource CardBorderBrush}"
             BorderThickness="1"
-            CornerRadius="16"
+            CornerRadius="22"
             Padding="28,24"
-            Margin="12">
+            Margin="14"
+            Effect="{StaticResource CardShadowEffect}">
         <StackPanel>
             <Grid>
                 <TextBlock Text="登录禁漫账号" FontSize="17" FontWeight="Bold" />
                 <Button Style="{StaticResource IconButtonStyle}"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
                         Click="CloseButton_Click" ToolTip="关闭">
-                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" />
+                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
                 </Button>
             </Grid>
             <TextBlock Text="登录后可同步收藏夹，账号密码仅保存在本地配置"
@@ -49,13 +50,15 @@
                     Height="38" Margin="0,14,0,0"
                     Click="LoginButton_Click">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock x:Name="BusyIcon" Text="&#xE895;"
-                               FontFamily="Segoe MDL2 Assets" FontSize="13"
-                               Visibility="Collapsed" VerticalAlignment="Center">
-                        <TextBlock.RenderTransform>
+                    <Path x:Name="BusyIcon" Data="{StaticResource IconLoading}"
+                          Stroke="White" StrokeThickness="2"
+                          StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                          Stretch="Uniform" Width="14" Height="14"
+                          Visibility="Collapsed" VerticalAlignment="Center">
+                        <Path.RenderTransform>
                             <RotateTransform x:Name="BusySpin" />
-                        </TextBlock.RenderTransform>
-                        <TextBlock.Triggers>
+                        </Path.RenderTransform>
+                        <Path.Triggers>
                             <EventTrigger RoutedEvent="FrameworkElement.Loaded">
                                 <BeginStoryboard>
                                     <Storyboard RepeatBehavior="Forever">
@@ -65,8 +68,8 @@
                                     </Storyboard>
                                 </BeginStoryboard>
                             </EventTrigger>
-                        </TextBlock.Triggers>
-                    </TextBlock>
+                        </Path.Triggers>
+                    </Path>
                     <TextBlock x:Name="BusyText" Text="登录中…" FontSize="13"
                                Margin="8,0,0,0" Visibility="Collapsed" />
                     <TextBlock x:Name="NormalText" Text="登录" FontSize="13" />

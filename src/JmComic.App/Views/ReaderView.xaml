@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              PreviewKeyDown="ReaderView_PreviewKeyDown">
 
-    <Grid Margin="16">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -67,7 +67,7 @@
         </Grid>
 
         <!-- 阅读区 -->
-        <Border Grid.Row="1" Background="{DynamicResource HoverBgBrush}" CornerRadius="12" Padding="8">
+        <Border Grid.Row="1" Background="{DynamicResource HoverBgBrush}" CornerRadius="18" Padding="8">
             <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Hidden"
                           HorizontalScrollBarVisibility="Hidden"
                           ScrollChanged="Scroller_ScrollChanged"

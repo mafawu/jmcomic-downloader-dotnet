@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:JmComic.App.Controls"
              xmlns:views="clr-namespace:JmComic.App.Views">
-    <Grid Margin="16">
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -36,11 +36,9 @@
         <Grid Grid.Row="1">
             <StackPanel x:Name="NoDirsPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="Collapsed">
-                <Border Width="64" Height="64" CornerRadius="18"
+                <Border Width="72" Height="72" CornerRadius="24"
                         Background="{DynamicResource PrimarySubtleBrush}">
-                    <TextBlock Text="&#xE8B7;" FontFamily="Segoe MDL2 Assets" FontSize="26"
-                               Foreground="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconFolderOpen}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <TextBlock Text="尚未配置本地目录" FontSize="15" FontWeight="SemiBold"
                            Margin="0,16,0,0" HorizontalAlignment="Center" />
@@ -54,11 +52,9 @@
 
             <StackPanel x:Name="LoadingPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="Collapsed">
-                <Border Width="64" Height="64" CornerRadius="18"
+                <Border Width="72" Height="72" CornerRadius="24"
                         Background="{DynamicResource HoverBgBrush}">
-                    <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="26"
-                               Foreground="{DynamicResource TextSecondaryBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconLoading}" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <TextBlock Text="扫描中…" FontSize="15" FontWeight="SemiBold"
                            Margin="0,16,0,0" HorizontalAlignment="Center" />
@@ -69,11 +65,9 @@
 
             <StackPanel x:Name="EmptyPanel" VerticalAlignment="Center" HorizontalAlignment="Center"
                         Visibility="Collapsed">
-                <Border Width="64" Height="64" CornerRadius="18"
+                <Border Width="72" Height="72" CornerRadius="24"
                         Background="{DynamicResource HoverBgBrush}">
-                    <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" FontSize="26"
-                               Foreground="{DynamicResource TextDisabledBrush}"
-                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <Path Data="{StaticResource IconLibrary}" Stroke="{DynamicResource TextDisabledBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>
                 <TextBlock x:Name="EmptyTitleText" Text="所选目录下还没有已下载的漫画" FontSize="15" FontWeight="SemiBold"
                            Margin="0,16,0,0" HorizontalAlignment="Center" />

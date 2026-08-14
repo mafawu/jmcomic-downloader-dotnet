@@ -40,23 +40,21 @@
         </Grid.RowDefinitions>
 
         <!-- 标题栏 -->
-        <Grid Grid.Row="0" Margin="16,14,16,10">
+        <Grid Grid.Row="0" Margin="18,16,18,12">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xE721;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                           Foreground="{DynamicResource PrimaryBrush}"
-                           VerticalAlignment="Center" />
+                <Path Data="{StaticResource IconSearch}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="14" Height="14" VerticalAlignment="Center" />
                 <TextBlock Text="本地搜索" FontSize="15" FontWeight="Bold"
                            Margin="8,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
         </Grid>
 
         <!-- 关键字输入框 -->
-        <Border Grid.Row="1" Margin="12,0,12,10" CornerRadius="8"
+        <Border Grid.Row="1" Margin="14,0,14,12" CornerRadius="10"
                 Background="{DynamicResource HoverBgBrush}"
                 BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
             <Grid>
                 <TextBox x:Name="KeywordBox" BorderThickness="0" Background="Transparent"
-                         Padding="12,8" FontSize="12.5"
+                         Padding="12,9" FontSize="12.5"
                          TextChanged="KeywordBox_TextChanged"
                          GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus" />
                 <TextBlock x:Name="PlaceholderText" Text="搜索漫画名 / 作者 / 标签"
@@ -67,7 +65,7 @@
                         HorizontalAlignment="Right" VerticalAlignment="Center"
                         Margin="0,0,4,0" ToolTip="清除筛选" Click="ClearButton_Click"
                         Visibility="Collapsed">
-                    <TextBlock Text="&#xE711;" FontFamily="Segoe MDL2 Assets" FontSize="11" />
+                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="11" Height="11" />
                 </Button>
             </Grid>
         </Border>
@@ -75,7 +73,7 @@
         <!-- 标签列表 -->
         <Grid Grid.Row="2">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                          Padding="12,0,12,12">
+                          Padding="14,0,14,14">
                 <ItemsControl x:Name="TagItems">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>

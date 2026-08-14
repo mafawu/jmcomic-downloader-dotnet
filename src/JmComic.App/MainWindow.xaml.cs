@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Shapes;
 using System.Windows.Shell;
 using JmComic.App.Common;
 using JmComic.App.Controls;
@@ -17,6 +18,7 @@ using JmComic.Core;
 using JmComic.Core.Models;
 using JmComic.Core.Sources;
 using Microsoft.Extensions.DependencyInjection;
+using Path = System.Windows.Shapes.Path;
 
 namespace JmComic.App;
 
@@ -315,7 +317,7 @@ public partial class MainWindow : Window
 
     private void UpdateThemeIcon()
     {
-        ThemeIcon.Text = ThemeManager.IsDark ? Icons.Moon : Icons.Sun;
+        ThemeIcon.Data = ThemeManager.IsDark ? Icons.Moon : Icons.Sun;
     }
 
     private void OpenConfigDir_Click(object sender, RoutedEventArgs e)
@@ -349,8 +351,8 @@ public partial class MainWindow : Window
         {
             // 显示侧栏：恢复可拖动范围与宽度（MinWidth 会顶住 Width=0，收起时必须先放开）
             PanelColumn.MinWidth = 300;
-            PanelColumn.MaxWidth = 420;
-            PanelColumn.Width = new GridLength(344);
+            PanelColumn.MaxWidth = 440;
+            PanelColumn.Width = new GridLength(348);
         }
         else
         {
@@ -434,6 +436,14 @@ public partial class MainWindow : Window
     [DllImport("user32.dll")]
     private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
 
+    // ===== DWM 窗口圆角（Windows 11）=====
+    private const int DwmwaWindowCornerPreference = 33;
+    private const int DwmwcpRound = 2;
+    private const int DwmwcpDoNotRound = 1;
+
+    [DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int attributeValue, int attributeSize);
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
@@ -441,7 +451,21 @@ public partial class MainWindow : Window
         if (PresentationSource.FromVisual(this) is HwndSource source)
         {
             source.AddHook(WindowProc);
+            // 窗口本身圆角：让 DWM 裁剪窗口四角，与外层霓虹边框圆角完全重合（仅 Windows 11 生效）
+            var cornerPreference = DwmwcpRound;
+            _ = DwmSetWindowAttribute(source.Handle, DwmwaWindowCornerPreference, ref cornerPreference, sizeof(int));
         }
+    }
+
+    private void UpdateWindowCorner()
+    {
+        // 最大化时窗口铺满工作区，取消圆角避免四角露桌面；还原时恢复圆角
+        if (PresentationSource.FromVisual(this) is not HwndSource source)
+        {
+            return;
+        }
+        var preference = WindowState == WindowState.Maximized ? DwmwcpDoNotRound : DwmwcpRound;
+        _ = DwmSetWindowAttribute(source.Handle, DwmwaWindowCornerPreference, ref preference, sizeof(int));
     }
 
     private IntPtr WindowProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -482,7 +506,11 @@ public partial class MainWindow : Window
     private void CloseButton_Click(object sender, RoutedEventArgs e)
         => SystemCommands.CloseWindow(this);
 
-    private void Window_StateChanged(object? sender, EventArgs e) => UpdateMaximizeIcon();
+    private void Window_StateChanged(object? sender, EventArgs e)
+    {
+        UpdateMaximizeIcon();
+        UpdateWindowCorner();
+    }
 
     private void UpdateMaximizeIcon()
     {
@@ -491,7 +519,7 @@ public partial class MainWindow : Window
             return;
         }
         var maximized = WindowState == WindowState.Maximized;
-        MaximizeIcon.Text = maximized ? Icons.Restore : Icons.Maximize;
+        MaximizeIcon.Data = maximized ? Icons.Restore : Icons.Maximize;
         MaximizeButton.ToolTip = maximized ? "还原" : "最大化";
     }
     // ====================== 登录区 ======================
@@ -515,7 +543,18 @@ public partial class MainWindow : Window
                 Style = (Style)FindResource("IconButtonStyle"),
                 ToolTip = "退出登录",
                 Margin = new Thickness(8, 0, 0, 0),
-                Content = new TextBlock { Text = Icons.SignOut, FontFamily = new FontFamily("Segoe MDL2 Assets"), FontSize = 14 },
+                Content = new Path
+                {
+                    Data = Icons.SignOut,
+                    Stroke = (Brush)FindResource("TextPrimaryBrush"),
+                    StrokeThickness = 1.8,
+                    StrokeStartLineCap = PenLineCap.Round,
+                    StrokeEndLineCap = PenLineCap.Round,
+                    StrokeLineJoin = PenLineJoin.Round,
+                    Stretch = Stretch.Uniform,
+                    Width = 15,
+                    Height = 15,
+                },
             };
             logout.Click += Logout_Click;
             panel.Children.Add(username);

@@ -9,11 +9,9 @@
         </Grid.RowDefinitions>
 
         <!-- 标题栏 -->
-        <Grid Grid.Row="0" Margin="16,14,16,10">
+        <Grid Grid.Row="0" Margin="18,16,18,12">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="14"
-                           Foreground="{DynamicResource PrimaryBrush}"
-                           VerticalAlignment="Center" />
+                <Path Data="{StaticResource IconInfo}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="14" Height="14" VerticalAlignment="Center" />
                 <TextBlock Text="漫画详情" FontSize="15" FontWeight="Bold"
                            Margin="8,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
@@ -22,10 +20,10 @@
         <!-- 详情内容 -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
-                      Padding="16,0,16,16">
+                      Padding="18,0,18,18">
             <StackPanel>
                 <!-- 封面 -->
-                <Border Height="220" CornerRadius="12"
+                <Border Height="220" CornerRadius="18"
                         Background="{DynamicResource HoverBgBrush}"
                         BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
                     <Image x:Name="CoverImage" Stretch="Uniform" Margin="8" />
@@ -46,7 +44,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Background="{DynamicResource ActiveNavBgBrush}"
-                                    CornerRadius="5" Padding="7,3" Margin="0,0,6,6">
+                                    CornerRadius="6" Padding="8,3" Margin="0,0,6,6">
                                 <TextBlock Text="{Binding}" FontSize="10.5"
                                            Foreground="{DynamicResource PrimaryBrush}" />
                             </Border>
