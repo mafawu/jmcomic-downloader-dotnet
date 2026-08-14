@@ -45,13 +45,13 @@
             <DockPanel Grid.Row="1" Margin="0,8,0,0">
                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                     <ToggleButton x:Name="ScrollModeButton" Style="{StaticResource ReaderModeToggleStyle}"
-                                  Content="滚动" IsChecked="True" Click="ModeToggle_Click" />
+                                  Content="滚动" Click="ModeToggle_Click" />
                     <ToggleButton x:Name="PageModeButton" Style="{StaticResource ReaderModeToggleStyle}"
-                                  Content="翻页" Margin="4,0,0,0" Click="ModeToggle_Click" />
+                                  Content="翻页" Margin="4,0,0,0" IsChecked="True" Click="ModeToggle_Click" />
                     <TextBlock x:Name="ModeHintText" FontSize="12"
                                Foreground="{DynamicResource TextSecondaryBrush}"
                                VerticalAlignment="Center" Margin="12,0,0,0"
-                               Text="滚动浏览 · Ctrl + 滚轮缩放" />
+                               Text="← / → 或滚轮翻页 · Ctrl + 滚轮缩放" />
                     <Border Width="1" Height="18" Background="{DynamicResource DividerBrush}"
                             Margin="14,0,12,0" />
                     <Button x:Name="FitWidthButton" Style="{StaticResource GhostButtonStyle}"
@@ -68,8 +68,8 @@
 
         <!-- 阅读区 -->
         <Border Grid.Row="1" Background="{DynamicResource HoverBgBrush}" CornerRadius="12" Padding="8">
-            <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled"
+            <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Hidden"
+                          HorizontalScrollBarVisibility="Hidden"
                           ScrollChanged="Scroller_ScrollChanged"
                           SizeChanged="Scroller_SizeChanged"
                           PreviewMouseWheel="Scroller_PreviewMouseWheel">

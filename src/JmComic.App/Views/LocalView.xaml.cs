@@ -282,7 +282,7 @@ public partial class LocalView : CardGridViewBase
                     cacheRoots.TryGetValue(dir, out var cached);
                     var scanned = incremental
                         ? _localLibrary.ScanIncremental(dir, cached ?? new List<LocalComic>())
-                        : _localLibrary.Scan(dir);
+                        : _localLibrary.Scan(dir, countImages: true);
                     cacheRoots[dir] = scanned;
                     merged.AddRange(scanned);
                 }
@@ -483,7 +483,7 @@ public partial class LocalView : CardGridViewBase
         var stats = $"{comic.ChapterCount} 章";
         if (comic.ImageCount > 0)
         {
-            stats += $" · {comic.ImageCount} 图";
+            stats += $" · {comic.ImageCount} 页";
         }
 
         return new LocalComicViewModel

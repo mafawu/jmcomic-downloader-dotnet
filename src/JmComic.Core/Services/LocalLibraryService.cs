@@ -111,7 +111,7 @@ public class LocalLibraryService
     }
 
     /// <summary>
-    /// 增量扫描：复用缓存中「目录修改时间未变化」的条目，只重建新增/变化的目录。
+    /// 增量扫描：复用缓存中「目录修改时间未变化」的条目，只重建新增/变化的目录（重建时统计图片总数供卡片展示）；缓存中缺少图片数的旧条目自动补全。
     /// <paramref name="cache"/> 为该根目录上次扫描到的漫画列表；返回该根目录当前的完整列表。
     /// </summary>
     public List<LocalComic> ScanIncremental(string rootDir, IReadOnlyList<LocalComic> cache)
@@ -141,9 +141,10 @@ public class LocalLibraryService
 
             if (cacheByPath.TryGetValue(albumDir, out var cached)
                 && cached.ModifiedAt == Directory.GetLastWriteTime(albumDir)
-                && cached.MetadataStamp == GetMetadataStamp(albumDir))
+                && cached.MetadataStamp == GetMetadataStamp(albumDir)
+                && cached.ImageCount > 0)
             {
-                // 目录未变化：直接复用缓存条目（含标签/封面），避免重复读元数据与枚举章节
+                // 目录未变化且已有图片数：直接复用缓存条目（含标签/封面/图片数），避免重复读元数据与枚举章节；旧缓存缺图片数时走重建补全
                 result.Add(cached);
                 continue;
             }
@@ -160,7 +161,7 @@ public class LocalLibraryService
                 continue;
             }
 
-            result.Add(BuildComic(albumDir, dirName, metadata, sourceMetadata, chapterDirs, false));
+            result.Add(BuildComic(albumDir, dirName, metadata, sourceMetadata, chapterDirs, true));
         }
 
         return result.OrderByDescending(c => c.ModifiedAt).ToList();

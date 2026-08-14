@@ -51,7 +51,7 @@ public partial class OnlineReaderView : UserControl
     private readonly HashSet<int> _loading = new();
     private double[] _tops = Array.Empty<double>();
 
-    private FitMode _fitMode = FitMode.FitWidth;
+    private FitMode _fitMode = FitMode.FitPage;
     /// <summary>最近加载图片的宽高比（宽/高），未加载页占位按此估算，保证适应模式下布局与单张图一致。</summary>
     private double _aspectRatio = 0.75;
     private bool _pageMode = true;

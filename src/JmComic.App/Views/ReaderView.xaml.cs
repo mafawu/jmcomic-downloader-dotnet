@@ -40,8 +40,8 @@ public partial class ReaderView : UserControl
     private double _viewWidth = 1200;
     private double _viewHeight = 800;
     private double _zoom = 1.0;
-    private FitMode _fitMode = FitMode.FitWidth;
-    private bool _pageMode;
+    private FitMode _fitMode = FitMode.FitPage;
+    private bool _pageMode = true;
     private int _currentPage;
     private int _pendingScrollTo = -1;
     private bool _progressRestored;

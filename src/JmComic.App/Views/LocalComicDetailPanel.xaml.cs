@@ -48,7 +48,7 @@ public partial class LocalComicDetailPanel : UserControl
         MetaText.Text = $"{comic.ChapterCount} 章";
         if (comic.ImageCount > 0)
         {
-            MetaText.Text += $" · {comic.ImageCount} 图";
+            MetaText.Text += $" · {comic.ImageCount} 页";
         }
         MetaText.Text += $" · 更新 {comic.ModifiedAt:yyyy-MM-dd}";
 

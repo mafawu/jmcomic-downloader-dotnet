@@ -309,6 +309,35 @@ public class LocalLibraryServiceTests
     }
 
     [Fact]
+    public void ScanIncremental_BackfillsImageCount_WhenCacheLacksCounts()
+    {
+        var root = CreateTempRoot();
+        try
+        {
+            var albumDir = Path.Combine(root, "漫画A");
+            Directory.CreateDirectory(Path.Combine(albumDir, "第1话"));
+            WriteFile(Path.Combine(albumDir, "第1话", "001.jpg"));
+            WriteFile(Path.Combine(albumDir, "第1话", "002.jpg"));
+
+            var service = CreateService();
+            var full = service.Scan(root); // 默认不统计图片数
+            Assert.Equal(0, full.Single().ImageCount);
+
+            // 缓存条目缺少图片数：增量扫描自动重建并补全总页数
+            var incremental = service.ScanIncremental(root, full);
+            var comic = incremental.Single();
+            Assert.Equal(2, comic.ImageCount);
+
+            // 补全后再次增量扫描直接复用缓存，不再重复重建
+            var second = service.ScanIncremental(root, incremental);
+            Assert.Equal(2, second.Single().ImageCount);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+    [Fact]
     public void Cache_SaveAndLoad_RoundTrips()
     {
         var root = CreateTempRoot();
