@@ -10,6 +10,7 @@ using JmComic.Core.Sources;
 using JmComic.Core.Sources.Copymanga;
 using JmComic.Core.Sources.Hitomi;
 using JmComic.Core.Sources.Jm;
+using JmComic.Core.Sources.Baozimh;
 using JmComic.Core.Sources.Wnacg;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -107,11 +108,14 @@ public partial class App : Application
         services.AddSingleton<HitomiGgResolver>();
         services.AddSingleton<HitomiGalleryClient>();
         services.AddSingleton<HitomiSource>();
+        services.AddSingleton<BaozimhHttpClient>();
+        services.AddSingleton<BaozimhSource>();
         services.AddSingleton<CopymangaHttpClient>();
         services.AddSingleton<CopymangaSource>();
         services.AddSingleton<IComicSource>(sp => sp.GetRequiredService<JmSource>());
         services.AddSingleton<IComicSource>(sp => sp.GetRequiredService<WnacgSource>());
         services.AddSingleton<IComicSource>(sp => sp.GetRequiredService<HitomiSource>());
+        services.AddSingleton<IComicSource>(sp => sp.GetRequiredService<BaozimhSource>());
         services.AddSingleton<IComicSource>(sp => sp.GetRequiredService<CopymangaSource>());
     }
 
@@ -124,3 +128,5 @@ public partial class App : Application
         }
     }
 }
+
+

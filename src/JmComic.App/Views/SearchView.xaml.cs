@@ -13,36 +13,24 @@ using JmComic.Core.Sources;
 
 namespace JmComic.App.Views;
 
-/// <summary>
-/// 搜索页：关键词 + 来源筛选 Tab（全部聚合 / 单源）+ 结果网格 + 分页。
-/// 聚合模式下并发查询所有免登录源，卡片带来源徽标；单源模式跳转详情携带 (sourceId, comicId)。
-/// 搜索结果按「源 + 页码」缓存：切 Tab 只筛选/补搜，不重复搜索已搜过的源。
-/// </summary>
 public partial class SearchView : CardGridViewBase
 {
-
     private readonly SourceManager _sourceManager;
     private readonly AggregateSearchService _aggregate;
     private readonly ConfigService _config;
     private readonly DownloadManager _downloadManager;
     private readonly LocalLibraryService _localLibrary;
 
-    /// <summary>已下载漫画的 (源,id) 键集合（卡片右上角徽章）。</summary>
     private HashSet<string> _downloadedKeys = new();
-    /// <summary>null 表示聚合全部源，否则限定单源搜索。</summary>
     private IComicSource? _filterSource;
     private long _page = 1;
-
-    /// <summary>搜索版本号：切 Tab/翻页/新搜索时递增，用于丢弃过期的异步响应。</summary>
     private int _searchVersion;
-    /// <summary>缓存对应的关键词；关键词变化时清空缓存全量重搜。</summary>
+    private CancellationTokenSource? _searchCts;
     private string _cachedKeyword = "";
-    /// <summary>按「源 id → 页码 → 分组」缓存搜索结果；失败分组也缓存，避免切 Tab 反复重搜/弹错。</summary>
     private readonly Dictionary<string, Dictionary<long, SourceSearchGroup>> _sourcePageCache = new();
 
     public ObservableCollection<AlbumCardViewModel> Results { get; } = new();
 
-    /// <summary>内容区当前状态，驱动 <see cref="StateHostStyle"/> 切换模板。</summary>
     public State CurrentState
     {
         get => (State)GetValue(CurrentStateProperty);
@@ -66,39 +54,37 @@ public partial class SearchView : CardGridViewBase
         BuildSourceTabs();
     }
 
-    /// <summary>按已注册源生成「全部 + 每源」筛选 Tab。</summary>
     private void BuildSourceTabs()
     {
-        var all = new RadioButton
-        {
-            Style = (Style)FindResource("FilterTabStyle"),
-            Content = "全部",
-            Tag = null,
-            IsChecked = true,
-        };
-        all.Click += SourceTab_Click;
-        SourceTabs.Children.Add(all);
-
         foreach (var source in _sourceManager.Sources)
         {
+            var isFirst = SourceTabs.Children.Count == 0;
             var tab = new RadioButton
             {
                 Style = (Style)FindResource("FilterTabStyle"),
                 Content = source.Info.DisplayName,
                 Tag = source,
-                Margin = new Thickness(8, 0, 0, 0),
+                IsChecked = isFirst,
+                Margin = isFirst ? new Thickness(0) : new Thickness(8, 0, 0, 0),
             };
             tab.Click += SourceTab_Click;
             SourceTabs.Children.Add(tab);
+        }
+        _filterSource = _sourceManager.Sources.FirstOrDefault();
+        if (_filterSource != null)
+        {
+            _sourceManager.Current = _filterSource;
         }
     }
 
     private void SourceTab_Click(object sender, RoutedEventArgs e)
     {
-        _filterSource = (sender as RadioButton)?.Tag as IComicSource;
+        var source = (sender as RadioButton)?.Tag as IComicSource;
+        if (source == null) return;
+        _filterSource = source;
+        _sourceManager.Current = source;
         if (!string.IsNullOrWhiteSpace(KeywordBox.Text))
         {
-            // 保留当前页码：全部→单源直接筛选缓存，单源→另一单源才补搜，单源→全部只补搜缺失源
             _ = SearchAsync(_page);
         }
     }
@@ -121,13 +107,12 @@ public partial class SearchView : CardGridViewBase
 
     private void KeywordBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateKeywordPlaceholder();
 
-    /// <summary>占位提示仅在「内容为空且未聚焦」时显示。</summary>
     private void UpdateKeywordPlaceholder()
     {
-        KeywordPlaceholder.Visibility =
-            string.IsNullOrEmpty(KeywordBox.Text) && !KeywordBox.IsKeyboardFocused
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+        var hasText = !string.IsNullOrEmpty(KeywordBox.Text);
+        var isFocused = KeywordBox.IsKeyboardFocused;
+        KeywordPlaceholder.Visibility = !hasText && !isFocused ? Visibility.Visible : Visibility.Collapsed;
+        ClearKeywordButton.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void SearchButton_Click(object sender, RoutedEventArgs e) => _ = SearchAsync(1, force: true);
@@ -143,6 +128,8 @@ public partial class SearchView : CardGridViewBase
 
     private void NextButton_Click(object sender, RoutedEventArgs e) => _ = SearchAsync(_page + 1);
 
+    private IComicSource SelectedSource => _filterSource ?? _sourceManager.Current;
+
     private async Task SearchAsync(long page, bool force = false)
     {
         var keyword = KeywordBox.Text.Trim();
@@ -151,43 +138,41 @@ public partial class SearchView : CardGridViewBase
             ToastService.Show("请输入搜索关键词", ToastKind.Info);
             return;
         }
-        if (page < 1)
-        {
-            return;
-        }
+        if (page < 1) return;
+
+        _searchCts?.Cancel();
+        _searchCts?.Dispose();
+        _searchCts = new CancellationTokenSource();
+        var searchCt = _searchCts.Token;
 
         _page = page;
         var version = ++_searchVersion;
-        // 新关键词或显式搜索（回车/按钮/重试）时清空缓存全量重搜；切 Tab/翻页复用缓存
         if (force || keyword != _cachedKeyword)
         {
             _sourcePageCache.Clear();
             _cachedKeyword = keyword;
         }
 
-        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
+        var source = SelectedSource;
         SetBusy(true);
         try
         {
-            if (_filterSource is { } source)
+            try
             {
-                var (group, fromCache) = await GetOrSearchSourceAsync(source, keyword, (int)page);
-                if (version != _searchVersion)
-                {
-                    return;
-                }
-                RenderSingle(group, page, showError: !fromCache);
+                var keysTask = Task.Run(() => _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir), searchCt);
+                var completed = await Task.WhenAny(keysTask, Task.Delay(TimeSpan.FromSeconds(2), searchCt));
+                if (completed == keysTask && keysTask.IsCompletedSuccessfully)
+                    _downloadedKeys = keysTask.Result;
             }
-            else
-            {
-                var (all, newFailed) = await SearchAggregateCachedAsync(keyword, (int)page);
-                if (version != _searchVersion)
-                {
-                    return;
-                }
-                RenderAggregate(all, page, newFailed);
-            }
+            catch (OperationCanceledException) { return; }
+            catch { }
+            if (searchCt.IsCancellationRequested) return;
+
+            var (group, fromCache) = await GetOrSearchSourceAsync(source, keyword, (int)page, searchCt);
+            if (version != _searchVersion || searchCt.IsCancellationRequested) return;
+            RenderSingle(group, page, showError: !fromCache);
         }
+        catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             if (version == _searchVersion)
@@ -199,53 +184,20 @@ public partial class SearchView : CardGridViewBase
         finally
         {
             if (version == _searchVersion)
-            {
                 SetBusy(false);
-            }
         }
     }
 
-    /// <summary>取某源某页结果：缓存命中直接返回，未命中补搜并写缓存（失败也写缓存）。</summary>
     private async Task<(SourceSearchGroup Group, bool FromCache)> GetOrSearchSourceAsync(
-        IComicSource source, string keyword, int page)
+        IComicSource source, string keyword, int page, CancellationToken ct = default)
     {
         if (TryGetCachedGroup(source.Info.Id, page, out var cached))
         {
             return (cached, true);
         }
-        var group = await _aggregate.SearchSourceAsync(source, keyword, page);
+        var group = await _aggregate.SearchSourceAsync(source, keyword, page, ct);
         StoreGroup(group, page);
         return (group, false);
-    }
-
-    /// <summary>聚合模式：只补搜当前页缺失的源，已缓存源直接复用；返回全部源分组及本次新失败列表。</summary>
-    private async Task<(List<SourceSearchGroup> All, List<SourceSearchGroup> NewFailed)> SearchAggregateCachedAsync(
-        string keyword, int page)
-    {
-        var missing = _aggregate.Sources
-            .Where(s => !TryGetCachedGroup(s.Info.Id, page, out _))
-            .ToList();
-
-        var newGroups = new List<SourceSearchGroup>();
-        if (missing.Count > 0)
-        {
-            var tasks = missing.Select(s => _aggregate.SearchSourceAsync(s, keyword, page)).ToArray();
-            newGroups.AddRange(await Task.WhenAll(tasks));
-            foreach (var group in newGroups)
-            {
-                StoreGroup(group, page);
-            }
-        }
-
-        var all = new List<SourceSearchGroup>(_aggregate.Sources.Count);
-        foreach (var source in _aggregate.Sources)
-        {
-            if (TryGetCachedGroup(source.Info.Id, page, out var group))
-            {
-                all.Add(group);
-            }
-        }
-        return (all, newGroups.Where(g => g.Error is not null).ToList());
     }
 
     private bool TryGetCachedGroup(string sourceId, int page, out SourceSearchGroup group)
@@ -269,7 +221,6 @@ public partial class SearchView : CardGridViewBase
         pages[page] = group;
     }
 
-    /// <summary>渲染单源结果；命中唯一漫画时直接打开详情。showError=false 表示复用缓存失败，不再弹错。</summary>
     private void RenderSingle(SourceSearchGroup group, long page, bool showError)
     {
         var result = group.Result;
@@ -284,7 +235,6 @@ public partial class SearchView : CardGridViewBase
         }
         if (result.IsSingleMatch && result.SingleComicId is { } singleId)
         {
-            // 搜索命中唯一漫画：直接打开详情
             Results.Clear();
             ShowState(State.Result);
             Navigation.OpenComic(group.Source.Info.Id, singleId);
@@ -302,37 +252,6 @@ public partial class SearchView : CardGridViewBase
             Results.Add(ToCard(item, group.Source, false));
         }
         UpdatePaging(page, result.TotalPages);
-    }
-
-    /// <summary>渲染聚合结果：按源注册顺序合并，仅提示本次新失败的源。</summary>
-    private void RenderAggregate(List<SourceSearchGroup> groups, long page, List<SourceSearchGroup> newFailed)
-    {
-        var okGroups = groups.Where(g => g.Result is not null).ToList();
-        if (okGroups.Count == 0)
-        {
-            ShowState(State.Empty);
-            if (newFailed.Count > 0)
-            {
-                ToastService.Show("全部来源搜索失败，请稍后重试", ToastKind.Error);
-            }
-            return;
-        }
-
-        Results.Clear();
-        foreach (var group in okGroups)
-        {
-            foreach (var item in group.Result!.Items)
-            {
-                Results.Add(ToCard(item, group.Source, true));
-            }
-        }
-
-        if (newFailed.Count > 0)
-        {
-            var names = string.Join("、", newFailed.Select(f => f.Source.Info.DisplayName));
-            ToastService.Show($"{names} 搜索失败，已展示其余来源结果", ToastKind.Info);
-        }
-        UpdatePaging(page, groups.Count == 0 ? 1 : groups.Max(g => g.Result?.TotalPages ?? 1));
     }
 
     private void UpdatePaging(long page, long totalPages)
@@ -368,7 +287,6 @@ public partial class SearchView : CardGridViewBase
         }),
     };
 
-    /// <summary>搜索页内容区状态。</summary>
     public enum State
     {
         Hint,
