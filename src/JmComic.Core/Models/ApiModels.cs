@@ -200,3 +200,27 @@ public class ComicInWeeklyRespData
     [JsonPropertyName("is_favorite")] public bool IsFavorite { get; set; }
     [JsonPropertyName("update_at")] public long UpdateAt { get; set; }
 }
+
+/// <summary>禁漫评论分页响应（/forum?mode=all）。</summary>
+public class ForumRespData
+{
+    [JsonPropertyName("list")] public List<ForumCommentRespData> List { get; set; } = new();
+    [JsonPropertyName("total")] public string Total { get; set; } = "";
+}
+
+/// <summary>禁漫评论条目（replys 为嵌套回评，结构相同）。</summary>
+public class ForumCommentRespData
+{
+    [JsonPropertyName("CID")] public string Cid { get; set; } = "";
+    [JsonPropertyName("AID")] public string? Aid { get; set; }
+    [JsonPropertyName("UID")] public string? Uid { get; set; }
+    [JsonPropertyName("parent_CID")] public string? ParentCid { get; set; }
+    [JsonPropertyName("content")] public string Content { get; set; } = "";
+    [JsonPropertyName("username")] public string? Username { get; set; }
+    [JsonPropertyName("nickname")] public string? Nickname { get; set; }
+    [JsonPropertyName("spoiler")] public string? Spoiler { get; set; }
+    [JsonPropertyName("is_spoiler")] public JsonElement? IsSpoiler { get; set; }
+    [JsonPropertyName("addtime")] public string? Addtime { get; set; }
+    [JsonPropertyName("likes")] public string? Likes { get; set; }
+    [JsonPropertyName("replys")] public List<ForumCommentRespData> Replies { get; set; } = new();
+}

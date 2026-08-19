@@ -1,5 +1,8 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using JmComic.App.Common;
 using JmComic.App.Services;
 using JmComic.Core.Errors;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +19,12 @@ public partial class LoginDialog : Window
         InitializeComponent();
         _session = App.Services.GetRequiredService<SessionService>();
         Loaded += (_, _) => UsernameBox.Focus();
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        DwmWindowCorner.Apply(this);
     }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -48,10 +57,7 @@ public partial class LoginDialog : Window
             return;
         }
 
-        LoginButton.IsEnabled = false;
-        BusyIcon.Visibility = Visibility.Visible;
-        BusyText.Visibility = Visibility.Visible;
-        NormalText.Visibility = Visibility.Collapsed;
+        SetBusy(true);
         ErrorCapsule.Visibility = Visibility.Collapsed;
         try
         {
@@ -61,10 +67,26 @@ public partial class LoginDialog : Window
         catch (Exception ex)
         {
             ShowError(JmErrorClassifier.Classify(ex).Message);
-            LoginButton.IsEnabled = true;
-            BusyIcon.Visibility = Visibility.Collapsed;
-            BusyText.Visibility = Visibility.Collapsed;
-            NormalText.Visibility = Visibility.Visible;
+            SetBusy(false);
+        }
+    }
+
+    /// <summary>切换登录忙碌态：仅在此状态下启动/停止旋转动画，避免对话框闲置时无限循环动画空转。</summary>
+    private void SetBusy(bool busy)
+    {
+        LoginButton.IsEnabled = !busy;
+        BusyIcon.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        BusyText.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        NormalText.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
+        if (busy)
+        {
+            BusySpin.BeginAnimation(RotateTransform.AngleProperty,
+                new DoubleAnimation(0, 360, TimeSpan.FromSeconds(1)) { RepeatBehavior = RepeatBehavior.Forever });
+        }
+        else
+        {
+            // 传 null 停止动画，Angle 恢复默认值
+            BusySpin.BeginAnimation(RotateTransform.AngleProperty, null);
         }
     }
 

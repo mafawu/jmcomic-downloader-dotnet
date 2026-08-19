@@ -59,4 +59,10 @@ public class DownloadItemViewModel : ObservableObject
         get => _isFailed;
         set => SetProperty(ref _isFailed, value);
     }
+
+    /// <summary>完成时间（历史记录用，未完成/进行中为 null）。</summary>
+    public DateTime? CompletedAt { get; set; }
+
+    /// <summary>状态展示文本（含完成时间）。</summary>
+    public string StatusDisplayText => StatusText + (CompletedAt is { } time ? $" · {time:MM-dd HH:mm}" : "");
 }

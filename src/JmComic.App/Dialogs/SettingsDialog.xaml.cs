@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using JmComic.App.Common;
 using JmComic.Core.Models;
 using JmComic.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,12 @@ public partial class SettingsDialog : Window
         TranslateBaseUrlBox.Text = config.TitleTranslate.BaseUrl;
         TranslateApiKeyBox.Text = config.TitleTranslate.ApiKey;
         TranslateModelBox.Text = config.TitleTranslate.Model;
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        DwmWindowCorner.Apply(this);
     }
 
     private void BrowseDownloadDir_Click(object sender, RoutedEventArgs e)

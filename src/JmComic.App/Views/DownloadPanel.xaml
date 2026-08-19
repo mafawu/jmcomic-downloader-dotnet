@@ -21,14 +21,10 @@
                        HorizontalAlignment="Right" VerticalAlignment="Center" />
         </Grid>
 
-        <!-- 全局进度 -->
-        <Border Grid.Row="1" Margin="14,0,14,12" Padding="14,12" CornerRadius="20"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+        <!-- 全局进度（背景/描边/圆角统一走 CardStyle，避免本地属性与 Style 重复设置） -->
+        <Border Grid.Row="1" Margin="14,0,14,12" Padding="14,12">
             <Border.Style>
                 <Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
-                    <Setter Property="Margin" Value="14,0,14,12" />
-                    <Setter Property="Padding" Value="14,12" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding AllDone}" Value="True">
                             <Setter Property="BorderBrush" Value="{DynamicResource SuccessBrush}" />
@@ -101,7 +97,7 @@
                                         <TextBlock Text="{Binding DisplayTitle}"
                                                    FontSize="12" FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"
-                                                   MaxWidth="210" VerticalAlignment="Center" />
+                                                   MaxWidth="180" VerticalAlignment="Center" />
                                         <Border x:Name="StatusBadge"
                                                 Style="{StaticResource StatusBadgeStyle}"
                                                 HorizontalAlignment="Right" Margin="8,0,0,0">
@@ -110,13 +106,23 @@
                                                        Foreground="{DynamicResource TextSecondaryBrush}" />
                                         </Border>
                                     </Grid>
+                                    <!-- 进度条始终显示：下载中为实时进度，完成后为 100% -->
                                     <ProgressBar x:Name="ItemProgress" Height="5" Margin="0,9,0,0"
-                                                 Visibility="Collapsed"
                                                  Value="{Binding Progress, Mode=OneWay}" />
                                     <TextBlock Text="{Binding ProgressText}"
                                                FontSize="10.5" FontFamily="Consolas"
                                                Foreground="{DynamicResource TextDisabledBrush}"
                                                Margin="0,5,0,0" />
+                                    <TextBlock x:Name="CompletedText" FontSize="10"
+                                               Foreground="{DynamicResource TextDisabledBrush}"
+                                               Margin="0,2,0,0"
+                                               Visibility="Collapsed">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="完成于 {0:MM-dd HH:mm}">
+                                                <Binding Path="CompletedAt" />
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
                                 </StackPanel>
                             </Border>
                             <DataTemplate.Triggers>
@@ -124,8 +130,6 @@
                                     <Setter TargetName="StatusBadge" Property="Background"
                                             Value="{DynamicResource PrimaryLightBrush}" />
                                     <Setter TargetName="BadgeText" Property="Foreground" Value="White" />
-                                    <Setter TargetName="ItemProgress" Property="Visibility"
-                                            Value="Visible" />
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsDone}" Value="True">
                                     <Setter TargetName="StatusBadge" Property="Background"
@@ -136,6 +140,12 @@
                                     <Setter TargetName="StatusBadge" Property="Background"
                                             Value="{DynamicResource DangerBrush}" />
                                     <Setter TargetName="BadgeText" Property="Foreground" Value="White" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsDone}" Value="True">
+                                    <Setter TargetName="CompletedText" Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                    <Setter TargetName="CompletedText" Property="Visibility" Value="Visible" />
                                 </DataTrigger>
                             </DataTemplate.Triggers>
                         </DataTemplate>

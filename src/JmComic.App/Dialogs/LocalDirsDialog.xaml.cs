@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using JmComic.App.Common;
 using JmComic.App.Services;
 using Microsoft.Extensions.DependencyInjection;
 using JmComic.Core.Services;
@@ -27,6 +28,12 @@ public partial class LocalDirsDialog : Window
             }
         }
         DirList.ItemsSource = _dirs;
+    }
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        DwmWindowCorner.Apply(this);
     }
 
     private void AddDir_Click(object sender, RoutedEventArgs e)

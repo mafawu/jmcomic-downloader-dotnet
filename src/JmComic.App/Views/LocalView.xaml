@@ -79,22 +79,18 @@
                         Click="RefreshButton_Click" />
             </StackPanel>
 
-            <ScrollViewer x:Name="ResultScroller" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                <ItemsControl x:Name="LocalItems" HorizontalContentAlignment="Stretch">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <controls:AutoColumnsUniformGrid
-                                ItemSlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
+            <Grid x:Name="ResultScroller" Visibility="Collapsed">
+                <controls:VirtualizedCardGrid x:Name="LocalItems"
+                                              SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}"
+                                              CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}">
+                    <controls:VirtualizedCardGrid.ItemTemplate>
                         <DataTemplate>
                             <controls:LocalComicCard HorizontalAlignment="Center"
-                                Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" />
+                                Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" />
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                    </controls:VirtualizedCardGrid.ItemTemplate>
+                </controls:VirtualizedCardGrid>
+            </Grid>
         </Grid>
 
         <!-- 分页 -->

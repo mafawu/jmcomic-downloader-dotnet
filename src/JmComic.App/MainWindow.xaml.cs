@@ -36,12 +36,41 @@ public partial class MainWindow : Window
     private LocalView? _localView;
     private UserControl? _localTabContent;
     private WeeklyView? _weeklyView;
+
+    /// <summary>章节详情页缓存：按最近访问 LRU 淘汰，限制常驻内存。</summary>
+    private const int MaxCachedChapterViews = 6;
     private readonly Dictionary<string, ChapterView> _chapterViews = new();
+    private readonly LinkedList<string> _chapterOrder = new();
     private UserControl? _lastPage;
     private bool _panelVisible;
 
+    /// <summary>窗口标题（copymanga 版可覆盖）。</summary>
+    protected virtual string WindowTitle => "禁漫天堂下载器";
+
+    // 右侧面板惰性创建：只有被切到前台时才实例化，避免启动时全部常驻
+    private ComicDetailPanel? _detailPanel;
+    private LocalSearchPanel? _searchPanel;
+    private LocalComicDetailPanel? _localDetailPanel;
+
+    private ComicDetailPanel DetailPanelView => _detailPanel ??= new ComicDetailPanel();
+    private LocalComicDetailPanel LocalDetailPanelView => _localDetailPanel ??= new LocalComicDetailPanel();
+
+    private LocalSearchPanel SearchPanelView
+    {
+        get
+        {
+            if (_searchPanel is null)
+            {
+                _searchPanel = new LocalSearchPanel();
+                _searchPanel.SearchChanged += (keyword, tags) => _localView?.ApplySearch(keyword, tags);
+            }
+            return _searchPanel;
+        }
+    }
+
     public MainWindow()
     {
+        Title = WindowTitle;
         InitializeComponent();
 
         _session = App.Services.GetRequiredService<SessionService>();
@@ -56,7 +85,6 @@ public partial class MainWindow : Window
         Navigation.OpenReaderHandler = OpenReader;
         Navigation.OpenLocalDetailHandler = OpenLocalDetail;
         Navigation.CloseLocalDetailHandler = ShowLocalList;
-        SearchPanelView.SearchChanged += (keyword, tags) => _localView?.ApplySearch(keyword, tags);
         Navigation.BackHandler = () =>
         {
             if (PageHost.Content is OnlineReaderView)
@@ -162,10 +190,7 @@ public partial class MainWindow : Window
             else
             {
                 // 本地页签停留在阅读页：恢复右侧漫画详情面板
-                DownloadPanelView.Visibility = Visibility.Collapsed;
-                SearchPanelView.Visibility = Visibility.Collapsed;
-                LocalDetailPanelView.Visibility = Visibility.Collapsed;
-                DetailPanelView.Visibility = Visibility.Visible;
+                RightPanelHost.Content = DetailPanelView;
                 _panelVisible = true;
                 UpdatePanelVisibility();
                 PageHost.Content = _localTabContent;
@@ -185,16 +210,23 @@ public partial class MainWindow : Window
         HideRightPanel();
         var source = _sourceManager.Get(sourceId);
         var key = $"{source.Info.Id}:{comicId}";
-        // 复用已打开的详情页，保持章节列表/滚动位置/选择状态
+        // 复用已打开的详情页，保持章节列表/滚动位置/选择状态；缓存按 LRU 淘汰，限制内存
         if (!_chapterViews.TryGetValue(key, out var view))
         {
-            if (_chapterViews.Count >= 30)
+            if (_chapterViews.Count >= MaxCachedChapterViews)
             {
-                _chapterViews.Clear();
+                var oldest = _chapterOrder.First!.Value;
+                _chapterOrder.RemoveFirst();
+                _chapterViews.Remove(oldest);
             }
             view = new ChapterView(source, comicId);
             _chapterViews[key] = view;
         }
+        else
+        {
+            _chapterOrder.Remove(key);
+        }
+        _chapterOrder.AddLast(key);
         PageHost.Content = view;
     }
 
@@ -216,10 +248,7 @@ public partial class MainWindow : Window
 
     private void OpenReader(LocalComic comic)
     {
-        DownloadPanelView.Visibility = Visibility.Collapsed;
-        SearchPanelView.Visibility = Visibility.Collapsed;
-        LocalDetailPanelView.Visibility = Visibility.Collapsed;
-        DetailPanelView.Visibility = Visibility.Visible;
+        RightPanelHost.Content = DetailPanelView;
         DetailPanelView.Show(comic);
         _panelVisible = true;
         UpdatePanelVisibility();
@@ -230,10 +259,7 @@ public partial class MainWindow : Window
     /// <summary>本地列表点击卡片：右侧切换到本地漫画详情面板（检查更新/更新下载）。</summary>
     private void OpenLocalDetail(LocalComic comic)
     {
-        DownloadPanelView.Visibility = Visibility.Collapsed;
-        SearchPanelView.Visibility = Visibility.Collapsed;
-        DetailPanelView.Visibility = Visibility.Collapsed;
-        LocalDetailPanelView.Visibility = Visibility.Visible;
+        RightPanelHost.Content = LocalDetailPanelView;
         LocalDetailPanelView.Show(comic);
         _panelVisible = true;
         UpdatePanelVisibility();
@@ -366,10 +392,7 @@ public partial class MainWindow : Window
     /// <summary>离开阅读页（进入列表/详情等页面）时：隐藏右侧面板，恢复下载队列内容。</summary>
     private void HideRightPanel()
     {
-        DetailPanelView.Visibility = Visibility.Collapsed;
-        SearchPanelView.Visibility = Visibility.Collapsed;
-        LocalDetailPanelView.Visibility = Visibility.Collapsed;
-        DownloadPanelView.Visibility = Visibility.Visible;
+        RightPanelHost.Content = DownloadPanelView;
         _panelVisible = false;
         UpdatePanelVisibility();
     }
@@ -380,11 +403,8 @@ public partial class MainWindow : Window
         _localView ??= new LocalView();
         _localTabContent = _localView;
         PageHost.Content = _localView;
+        RightPanelHost.Content = SearchPanelView;
         _localView.SetSearchPanel(SearchPanelView);
-        SearchPanelView.Visibility = Visibility.Visible;
-        DownloadPanelView.Visibility = Visibility.Collapsed;
-        DetailPanelView.Visibility = Visibility.Collapsed;
-        LocalDetailPanelView.Visibility = Visibility.Collapsed;
         _panelVisible = true;
         UpdatePanelVisibility();
         _localView.OnShown();
@@ -524,9 +544,16 @@ public partial class MainWindow : Window
     }
     // ====================== 登录区 ======================
 
+    /// <summary>当前源支持登录（有收藏能力）时才显示登录区；纯免登录源（copymanga）隐藏。</summary>
+    private bool ShowLoginArea => _sourceManager.Current.Info.SupportsFavorites;
+
     private void UpdateLoginArea()
     {
         LoginArea.Child = null;
+        if (!ShowLoginArea)
+        {
+            return;
+        }
         if (_session.IsLoggedIn)
         {
             var panel = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using JmComic.Core.Downloading;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
@@ -95,6 +96,62 @@ public class JmSource : IComicSource
             });
         }
         return pages;
+    }
+
+    /// <summary>获取本子评论分页（第 1 页起，每页 10 条）。</summary>
+    public Task<CommentPage> GetCommentsAsync(string comicId, int page, CancellationToken ct = default)
+        => GetCommentPageAsync(_client.GetAlbumCommentsAsync(long.Parse(comicId), page, ct), page);
+
+    /// <summary>获取全站评论分页（不带本子限定）。</summary>
+    public Task<CommentPage> GetForumCommentsAsync(int page, CancellationToken ct = default)
+        => GetCommentPageAsync(_client.GetForumCommentsAsync(page, ct), page);
+
+    private static async Task<CommentPage> GetCommentPageAsync(Task<ForumRespData> task, int page)
+    {
+        var forum = await task;
+        var total = long.TryParse(forum.Total, out var parsed) ? parsed : (long?)null;
+        return new CommentPage
+        {
+            Page = page,
+            Total = total,
+            Items = forum.List.Select(ToComment).ToList(),
+        };
+    }
+
+    private static ComicComment ToComment(ForumCommentRespData item) => new()
+    {
+        CommentId = item.Cid,
+        AlbumId = item.Aid,
+        UserId = item.Uid,
+        ParentCommentId = string.IsNullOrEmpty(item.ParentCid) || item.ParentCid == "0" ? null : item.ParentCid,
+        Content = HtmlText.StripToText(item.Content),
+        Username = item.Username,
+        Nickname = item.Nickname,
+        IsSpoiler = IsSpoilerComment(item),
+        CreatedAt = item.Addtime,
+        Likes = long.TryParse(item.Likes, out var likes) ? likes : null,
+        Replies = item.Replies.Select(ToComment).ToList(),
+    };
+
+    /// <summary>剧透判断与参考实现一致：优先 is_spoiler 字段，缺失时 spoiler == "2"。</summary>
+    private static bool IsSpoilerComment(ForumCommentRespData item)
+    {
+        if (item.IsSpoiler is { } raw)
+        {
+            if (raw.ValueKind == JsonValueKind.True)
+            {
+                return true;
+            }
+            if (raw.ValueKind == JsonValueKind.False)
+            {
+                return false;
+            }
+            if (raw.ValueKind == JsonValueKind.String && raw.GetString() is { } text)
+            {
+                return text is "1" or "2" || text.Equals("true", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        return item.Spoiler == "2";
     }
 
     private static ComicSummary ToSummary(AlbumInSearchRespData item) => new()

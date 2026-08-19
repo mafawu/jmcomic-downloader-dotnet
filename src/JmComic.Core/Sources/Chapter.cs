@@ -20,4 +20,7 @@ public class Chapter
 
     /// <summary>站点 id 为纯数字时的数值形式（如禁漫）；非数字站点为 null。</summary>
     public long? NumericId { get; init; }
+
+    /// <summary>章节排序值（站点顺序；无顺序概念的源默认 0）。</summary>
+    public double OrderValue { get; init; }
 }

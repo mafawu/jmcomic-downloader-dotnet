@@ -7,6 +7,7 @@
         Title="禁漫天堂下载器"
         Width="1280" Height="800"
         MinWidth="1080" MinHeight="680"
+        UseLayoutRounding="True"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="CanResize"
@@ -24,7 +25,7 @@
 
     <!-- 淡雅外框：窗口由 DWM 圆角（8px），边框圆角略小（6px）保证弧线处边框完整 -->
     <Border BorderBrush="{DynamicResource WindowBorderBrush}"
-            BorderThickness="1.5" CornerRadius="6"
+            BorderThickness="1" CornerRadius="6"
             Padding="0" Margin="0"
             Background="{DynamicResource AppBackgroundBrush}"
             ClipToBounds="True">
@@ -50,17 +51,22 @@
 
                 <!-- 品牌 -->
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="32" Height="32" CornerRadius="10"
-                            Effect="{StaticResource CardShadowEffect}">
-                        <Border.Background>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                                <GradientStop Color="{DynamicResource PrimaryGradientStartColor}" Offset="0" />
-                                <GradientStop Color="{DynamicResource PrimaryGradientEndColor}" Offset="1" />
-                            </LinearGradientBrush>
-                        </Border.Background>
-                        <TextBlock Text="JM" Foreground="White" FontSize="12" FontWeight="Bold"
-                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
+                    <Grid Width="32" Height="32">
+                        <!-- 专用阴影层：渐变背景 + 光晕，不承载文字 -->
+                        <Border CornerRadius="10" Effect="{StaticResource CardShadowEffect}">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                    <GradientStop Color="{DynamicResource PrimaryGradientStartColor}" Offset="0" />
+                                    <GradientStop Color="{DynamicResource PrimaryGradientEndColor}" Offset="1" />
+                                </LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <!-- 内容层：文字不挂 Effect，避免被光栅化变糊 -->
+                        <Border CornerRadius="10">
+                            <TextBlock Text="JM" Foreground="White" FontSize="12" FontWeight="Bold"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
                     <TextBlock Text="JM 下载器" FontSize="14" FontWeight="Bold"
                                Margin="10,0,0,0" VerticalAlignment="Center" />
                     <ComboBox x:Name="SourceBox" Width="132" Margin="16,0,0,0"
@@ -147,13 +153,14 @@
                 <ColumnDefinition x:Name="PanelColumn" Width="348" MinWidth="300" MaxWidth="440" />
             </Grid.ColumnDefinitions>
 
-            <!-- 左侧霓虹导航栏 -->
-            <Border Grid.Column="0" Width="196" Margin="14,14,0,14"
-                    Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
-                    CornerRadius="18" Padding="10,12"
-                    Effect="{StaticResource CardShadowEffect}">
-                <StackPanel>
+            <!-- 左侧霓虹导航栏：阴影/背景只挂在专用层上，内容层不挂 Effect 保持文字清晰 -->
+            <Grid Grid.Column="0" Width="196" Margin="14,14,0,14">
+                <Border Background="{DynamicResource SurfaceBrush}"
+                        BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                        CornerRadius="18"
+                        Effect="{StaticResource CardShadowEffect}" />
+                <Border CornerRadius="18" Padding="10,12">
+                    <StackPanel>
                     <!-- 发现 -->
                     <TextBlock Text="发现" FontSize="10.5" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextDisabledBrush}"
@@ -233,7 +240,8 @@
                         </StackPanel>
                     </RadioButton>
                 </StackPanel>
-            </Border>
+                </Border>
+            </Grid>
 
             <!-- 内容区 -->
             <ContentControl x:Name="PageHost" Grid.Column="1" Margin="0,0,0,0" />
@@ -242,10 +250,11 @@
                           HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                           Background="Transparent" ShowsPreview="True" />
 
-            <views:DownloadPanel x:Name="DownloadPanelView" Grid.Column="3" />
-            <views:ComicDetailPanel x:Name="DetailPanelView" Grid.Column="3" Visibility="Collapsed" />
-            <views:LocalSearchPanel x:Name="SearchPanelView" Grid.Column="3" Visibility="Collapsed" />
-            <views:LocalComicDetailPanel x:Name="LocalDetailPanelView" Grid.Column="3" Visibility="Collapsed" />
+            <!-- 右侧面板：同一时刻只有一个在视觉树中（ContentControl 换内容），
+                 其余实例惰性创建、切走后离树仅保留状态，减少常驻渲染/绑定开销 -->
+            <ContentControl x:Name="RightPanelHost" Grid.Column="3">
+                <views:DownloadPanel x:Name="DownloadPanelView" />
+            </ContentControl>
 
             <controls:SnackbarHost x:Name="Snackbars" Grid.Column="1"
                                    HorizontalAlignment="Right" VerticalAlignment="Bottom"

@@ -19,6 +19,8 @@
                       Direction="270" Opacity="0.22" Color="{DynamicResource CardShadowColor}" />
 
     <!-- ===== 文本 ===== -->
+    <!-- 保持 Display 模式（与项目原始观感一致）：Display 使文本行高按像素网格取整，
+         下拉项/按钮/输入框的排版高度与改动前完全一致；配合窗口 UseLayoutRounding 更清晰 -->
     <Style TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
@@ -75,12 +77,8 @@
             </Setter.Value>
         </Setter>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryFgBrush}" />
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect BlurRadius="14" ShadowDepth="2" Direction="270"
-                                  Opacity="0.55" Color="{DynamicResource PrimaryGlowColor}" />
-            </Setter.Value>
-        </Setter>
+        <!-- 无常驻 DropShadowEffect：每个主按钮都常驻光晕在低配机/软件渲染下是纯浪费（掉帧来源），
+             霓虹感由渐变背景与 hover/pressed 提亮承担；模板直接沿用 BaseButtonStyle -->
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background">
@@ -214,18 +212,25 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="Bd"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10">
-                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <!-- 专用光晕层：不承载输入文字，聚焦光晕只光栅化这一层 -->
+                        <Border x:Name="Glow" CornerRadius="10" Visibility="Collapsed" />
+                        <!-- 内容层：不挂 Effect，输入文字保持清晰 -->
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource InputFocusBrush}" />
                             <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
-                            <Setter TargetName="Bd" Property="Effect">
+                            <Setter TargetName="Glow" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Glow" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                            <Setter TargetName="Glow" Property="Effect">
                                 <Setter.Value>
                                     <DropShadowEffect BlurRadius="12" ShadowDepth="0"
                                                       Opacity="0.5" Color="{DynamicResource PrimaryGlowColor}" />
@@ -257,18 +262,25 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="PasswordBox">
-                    <Border x:Name="Bd"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="10">
-                        <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <!-- 专用光晕层：不承载输入文字，聚焦光晕只光栅化这一层 -->
+                        <Border x:Name="Glow" CornerRadius="10" Visibility="Collapsed" />
+                        <!-- 内容层：不挂 Effect，输入文字保持清晰 -->
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource InputFocusBrush}" />
                             <Setter TargetName="Bd" Property="BorderThickness" Value="1.5" />
-                            <Setter TargetName="Bd" Property="Effect">
+                            <Setter TargetName="Glow" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Glow" Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                            <Setter TargetName="Glow" Property="Effect">
                                 <Setter.Value>
                                     <DropShadowEffect BlurRadius="12" ShadowDepth="0"
                                                       Opacity="0.5" Color="{DynamicResource PrimaryGlowColor}" />
@@ -336,18 +348,25 @@
                                           Content="{TemplateBinding SelectionBoxItem}"
                                           ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" StaysOpen="False">
-                            <Border Background="{DynamicResource SurfaceBrush}"
-                                    BorderBrush="{DynamicResource CardBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Margin="0,4,0,0"
-                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                    MaxHeight="320"
-                                    Effect="{StaticResource CardShadowEffect}">
-                                <ScrollViewer>
-                                    <ItemsPresenter />
-                                </ScrollViewer>
-                            </Border>
+                            <!-- 必须保留 AllowsTransparency：弹窗内容带 4px 顶部间隙，去掉后间隙露出 OS 窗口底色
+                                 （浅色/深色下都是黑条）。代价是弹窗走分层窗口，但下拉面板很小、仅打开时存在，可忽略；
+                                 阴影只挂在专用阴影层上，列表项保持硬件文本渲染不模糊 -->
+                            <Grid Margin="0,4,0,0">
+                                <!-- 专用阴影层：不承载列表项 -->
+                                <Border Background="{DynamicResource SurfaceBrush}"
+                                        BorderBrush="{DynamicResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="10"
+                                        Effect="{StaticResource CardShadowEffect}" />
+                                <!-- 内容层：列表项不挂 Effect，保持文字清晰 -->
+                                <Border CornerRadius="10"
+                                        MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="320">
+                                    <ScrollViewer>
+                                        <ItemsPresenter />
+                                    </ScrollViewer>
+                                </Border>
+                            </Grid>
                         </Popup>
                     </Grid>
                     <ControlTemplate.Triggers>
@@ -407,16 +426,22 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" Background="Transparent" CornerRadius="11" Padding="12,10">
-                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          VerticalAlignment="Center" />
-                    </Border>
+                    <Grid>
+                        <!-- 专用光晕层：不承载文字，选中态光晕只光栅化这一层 -->
+                        <Border x:Name="Glow" CornerRadius="11" Visibility="Collapsed" />
+                        <!-- 内容层：不挂 Effect，导航文字/图标保持清晰 -->
+                        <Border x:Name="Bd" Background="Transparent" CornerRadius="11" Padding="12,10">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBgBrush}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="Background">
+                            <Setter TargetName="Glow" Property="Visibility" Value="Visible" />
+                            <Setter TargetName="Glow" Property="Background">
                                 <Setter.Value>
                                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                         <GradientStop Color="{DynamicResource PrimaryGradientStartColor}" Offset="0" />
@@ -424,10 +449,18 @@
                                     </LinearGradientBrush>
                                 </Setter.Value>
                             </Setter>
-                            <Setter TargetName="Bd" Property="Effect">
+                            <Setter TargetName="Glow" Property="Effect">
                                 <Setter.Value>
                                     <DropShadowEffect BlurRadius="12" ShadowDepth="0"
                                                       Opacity="0.6" Color="{DynamicResource PrimaryGlowColor}" />
+                                </Setter.Value>
+                            </Setter>
+                            <Setter TargetName="Bd" Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                        <GradientStop Color="{DynamicResource PrimaryGradientStartColor}" Offset="0" />
+                                        <GradientStop Color="{DynamicResource PrimaryGradientEndColor}" Offset="1" />
+                                    </LinearGradientBrush>
                                 </Setter.Value>
                             </Setter>
                             <Setter Property="Foreground" Value="White" />
@@ -608,13 +641,18 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border Background="{TemplateBinding Background}"
-                            CornerRadius="9"
-                            Padding="{TemplateBinding Padding}"
-                            BorderThickness="0"
-                            Effect="{StaticResource CardShadowEffect}">
-                        <ContentPresenter />
-                    </Border>
+                    <Grid>
+                        <!-- 专用阴影层：不承载文本 -->
+                        <Border Background="{TemplateBinding Background}"
+                                CornerRadius="9"
+                                Effect="{StaticResource CardShadowEffect}" />
+                        <!-- 内容层：文本不挂 Effect，保持清晰 -->
+                        <Border CornerRadius="9"
+                                Padding="{TemplateBinding Padding}"
+                                BorderThickness="0">
+                            <ContentPresenter />
+                        </Border>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -667,29 +705,43 @@
         </Setter>
     </Style>
 
-    <!-- ===== v2 卡片 hover：上浮 + 霓虹光晕 + 渐变边框高亮 ===== -->
+    <!-- ===== v2 卡片 hover 光晕（专用阴影层样式） =====
+         只允许挂在无内容的背景层上；内容层严禁挂 Effect——Effect 会把整个子树
+         光栅化到中间位图，封面/文字全部变糊。悬停状态取自所在卡片容器（Grid），
+         上浮位移由容器自身的样式触发，保证阴影层与内容层一起移动。 -->
     <Style x:Key="CardHoverStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CacheMode" Value="BitmapCache" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Grid}}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
+                <Setter Property="Background" Value="{DynamicResource CardHoverBrush}" />
+                <Setter Property="Effect">
+                    <Setter.Value>
+                        <DropShadowEffect BlurRadius="18" ShadowDepth="5"
+                                          Direction="270" Opacity="0.45"
+                                          Color="{DynamicResource CardShadowColor}" />
+                    </Setter.Value>
+                </Setter>
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ===== v2 卡片容器：hover 上浮（RenderTransform 移动整个卡片，含阴影层与内容层） ===== -->
+    <Style x:Key="CardLiftStyle" TargetType="Grid">
         <Setter Property="RenderTransformOrigin" Value="0.5,0.5" />
         <Setter Property="RenderTransform">
             <Setter.Value>
                 <TranslateTransform X="0" Y="0" />
             </Setter.Value>
         </Setter>
-        <Setter Property="CacheMode" Value="BitmapCache" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
-                <Setter Property="Background" Value="{DynamicResource CardHoverBrush}" />
                 <Setter Property="RenderTransform">
                     <Setter.Value>
                         <TranslateTransform X="0" Y="-2.5" />
-                    </Setter.Value>
-                </Setter>
-                <Setter Property="Effect">
-                    <Setter.Value>
-                        <DropShadowEffect BlurRadius="18" ShadowDepth="5"
-                                          Direction="270" Opacity="0.45"
-                                          Color="{DynamicResource CardShadowColor}" />
                     </Setter.Value>
                 </Setter>
             </Trigger>
@@ -721,15 +773,20 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
-                    <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="12"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True"
-                            Effect="{StaticResource CardShadowEffect}">
-                        <ItemsPresenter />
-                    </Border>
+                    <Grid>
+                        <!-- 专用阴影层：不承载菜单项 -->
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12"
+                                Effect="{StaticResource CardShadowEffect}" />
+                        <!-- 内容层：菜单项不挂 Effect，保持文字清晰 -->
+                        <Border CornerRadius="12"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ItemsPresenter />
+                        </Border>
+                    </Grid>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

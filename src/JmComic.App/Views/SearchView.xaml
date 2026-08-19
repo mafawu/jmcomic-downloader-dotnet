@@ -72,20 +72,15 @@
         </DataTemplate>
 
         <DataTemplate x:Key="ResultStateTemplate">
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Results, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <controls:AutoColumnsUniformGrid ItemSlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <controls:AlbumCard Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+            <controls:VirtualizedCardGrid ItemsSource="{Binding Results, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <controls:VirtualizedCardGrid.ItemTemplate>
+                    <DataTemplate>
+                        <controls:AlbumCard Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" />
+                    </DataTemplate>
+                </controls:VirtualizedCardGrid.ItemTemplate>
+            </controls:VirtualizedCardGrid>
         </DataTemplate>
 
         <!-- 来源筛选 Tab 胶囊 -->

@@ -38,6 +38,7 @@ public class JmHttpClient
         Favorite,
         WeeklyInfo,
         Weekly,
+        Forum,
     }
 
     private static string ApiPathStr(ApiPath path) => path switch
@@ -51,6 +52,7 @@ public class JmHttpClient
         ApiPath.Favorite => "/favorite",
         ApiPath.WeeklyInfo => "/week",
         ApiPath.Weekly => "/week/filter",
+        ApiPath.Forum => "/forum",
         _ => throw new ArgumentOutOfRangeException(nameof(path)),
     };
 
@@ -612,6 +614,29 @@ public class JmHttpClient
             ["type"] = typeId,
         };
         return JmGetJsonAsync<GetWeeklyRespData>(ApiPath.Weekly, query, "获取每周必看", ct);
+    }
+
+    /// <summary>获取本子评论分页（mode=all，total 为全部主评论数）。</summary>
+    public Task<ForumRespData> GetAlbumCommentsAsync(long aid, long page, CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, object>
+        {
+            ["mode"] = "all",
+            ["page"] = page,
+            ["aid"] = aid,
+        };
+        return JmGetJsonAsync<ForumRespData>(ApiPath.Forum, query, "获取评论", ct);
+    }
+
+    /// <summary>获取全站评论分页（不带本子限定）。</summary>
+    public Task<ForumRespData> GetForumCommentsAsync(long page, CancellationToken ct = default)
+    {
+        var query = new Dictionary<string, object>
+        {
+            ["mode"] = "all",
+            ["page"] = page,
+        };
+        return JmGetJsonAsync<ForumRespData>(ApiPath.Forum, query, "获取全站评论", ct);
     }
 
     /// <summary>收藏 / 取消收藏 漫画。</summary>

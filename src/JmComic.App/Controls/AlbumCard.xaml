@@ -2,17 +2,17 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:common="clr-namespace:JmComic.App.Common"
-             Margin="0,0,16,16"
+             Margin="0,0,14,14"
              SizeChanged="Card_SizeChanged">
-    <Border x:Name="Root" Style="{StaticResource CardHoverStyle}" CornerRadius="20"
-            Background="{DynamicResource SurfaceBrush}"
-            BorderBrush="{DynamicResource CardBorderBrush}"
-            BorderThickness="1"
-            Cursor="Hand"
-            MouseEnter="Root_MouseEnter"
-            MouseLeave="Root_MouseLeave"
-            MouseLeftButtonUp="Root_MouseLeftButtonUp">
-        <StackPanel>
+    <Grid x:Name="Root" Style="{StaticResource CardLiftStyle}" Cursor="Hand"
+          MouseEnter="Root_MouseEnter"
+          MouseLeave="Root_MouseLeave"
+          MouseLeftButtonUp="Root_MouseLeftButtonUp">
+        <!-- 专用光晕/背景层：无内容，hover 阴影只光栅化这一层，内容层保持清晰 -->
+        <Border Style="{StaticResource CardHoverStyle}" CornerRadius="20" />
+        <!-- 内容层：不挂任何 Effect -->
+        <Border CornerRadius="20">
+            <StackPanel>
             <!-- 封面高度由代码按 166:222 宽高比随宽度自适应，保证任意窗口/分格大小下不变形 -->
             <Border x:Name="CoverHost" CornerRadius="20,20,0,0" ClipToBounds="True">
                 <Grid>
@@ -63,14 +63,14 @@
             <StackPanel Margin="13,11,13,13" MinHeight="64">
                 <TextBlock Text="{Binding Name}"
                            FontSize="13" FontWeight="SemiBold"
-                           TextWrapping="Wrap" MaxHeight="38"
-                           TextTrimming="CharacterEllipsis" />
+                           TextWrapping="Wrap" common:TextBlockExt.MaxLines="2" />
                 <TextBlock Text="{Binding AuthorText}"
                            FontSize="11"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            Margin="0,6,0,0"
                            TextTrimming="CharacterEllipsis" />
             </StackPanel>
-        </StackPanel>
-    </Border>
+            </StackPanel>
+        </Border>
+    </Grid>
 </UserControl>

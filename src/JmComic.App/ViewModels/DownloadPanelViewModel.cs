@@ -4,23 +4,26 @@ using System.Windows.Threading;
 using JmComic.App.Common;
 using JmComic.App.Services;
 using JmComic.Core.Downloading;
+using JmComic.Core.Services;
 
 namespace JmComic.App.ViewModels;
 
 /// <summary>
 /// 下载面板视图模型：订阅 DownloadManager 事件，
-/// 汇总章节进度、全局进度与实时速度。
+/// 汇总章节进度、全局进度与实时速度；历史记录持久化到 download-history.json。
 /// </summary>
 public class DownloadPanelViewModel : ObservableObject, IDisposable
 {
     private readonly DownloadManager _manager;
     private readonly Dispatcher _dispatcher;
+    private readonly DownloadHistoryService _history;
     private readonly Dictionary<long, DownloadItemViewModel> _itemsById = new();
 
     public DownloadPanelViewModel(DownloadManager manager)
     {
         _manager = manager;
         _dispatcher = Application.Current.Dispatcher;
+        _history = new DownloadHistoryService();
 
         _manager.ChapterPending += OnChapterPending;
         _manager.ChapterStart += OnChapterStart;
@@ -29,6 +32,8 @@ public class DownloadPanelViewModel : ObservableObject, IDisposable
         _manager.ChapterEnd += OnChapterEnd;
         _manager.OverallProgress += OnOverallProgress;
         _manager.SpeedChanged += OnSpeedChanged;
+
+        LoadHistory();
     }
 
     public ObservableCollection<DownloadItemViewModel> Items { get; } = new();
@@ -126,12 +131,29 @@ public class DownloadPanelViewModel : ObservableObject, IDisposable
             item.StatusText = "已完成";
             item.IsDone = true;
             item.Progress = 100;
+            item.CompletedAt = DateTime.Now;
+            _history.Append(new DownloadHistoryEntry
+            {
+                AlbumTitle = item.AlbumTitle,
+                ChapterTitle = item.ChapterTitle,
+                Status = "成功",
+                CompletedAt = DateTime.Now,
+                ImageCount = item.TotalCount,
+            });
             ToastService.Show($"「{item.ChapterTitle}」下载完成", ToastKind.Success);
         }
         else
         {
             item.StatusText = "下载失败";
             item.IsFailed = true;
+            item.CompletedAt = DateTime.Now;
+            _history.Append(new DownloadHistoryEntry
+            {
+                AlbumTitle = item.AlbumTitle,
+                ChapterTitle = item.ChapterTitle,
+                Status = "失败",
+                CompletedAt = DateTime.Now,
+            });
             ToastService.Show(e.ErrMsg, ToastKind.Error);
         }
         AllDone = Items.Count > 0 && Items.All(i => i.IsDone);
@@ -147,6 +169,30 @@ public class DownloadPanelViewModel : ObservableObject, IDisposable
     {
         Speed = e.Speed;
     });
+
+    /// <summary>启动时加载持久化历史记录，以"已完成/失败"状态恢复显示在队列底部。</summary>
+    private void LoadHistory()
+    {
+        var history = _history.Load();
+        foreach (var entry in history)
+        {
+            var item = new DownloadItemViewModel
+            {
+                ChapterId = -1, // 历史条目无真实 chapter id，仅展示
+                AlbumTitle = entry.AlbumTitle,
+                ChapterTitle = entry.ChapterTitle,
+                StatusText = entry.Status == "成功" ? "已完成" : "下载失败",
+                IsDone = entry.Status == "成功",
+                IsFailed = entry.Status != "成功",
+                Progress = entry.Status == "成功" ? 100 : 0,
+                TotalCount = entry.ImageCount,
+                ProgressText = entry.ImageCount > 0 ? $"{entry.ImageCount} / {entry.ImageCount}" : "",
+                CompletedAt = entry.CompletedAt,
+            };
+            Items.Add(item);
+        }
+        HasDownloads = Items.Count > 0;
+    }
 
     private DownloadItemViewModel GetOrAdd(long chapterId, string albumTitle, string chapterTitle)
     {

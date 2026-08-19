@@ -73,21 +73,17 @@
                         Click="RefreshButton_Click" />
             </StackPanel>
 
-            <ScrollViewer x:Name="ResultScroller" VerticalScrollBarVisibility="Auto"
-                          Visibility="Collapsed">
-                <ItemsControl x:Name="WeeklyItems">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <controls:AutoColumnsUniformGrid ItemSlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
+            <Grid x:Name="ResultScroller" Visibility="Collapsed">
+                <controls:VirtualizedCardGrid x:Name="WeeklyItems"
+                                              SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <controls:VirtualizedCardGrid.ItemTemplate>
                         <DataTemplate>
-                            <controls:AlbumCard Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                            <controls:AlbumCard Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" />
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                    </controls:VirtualizedCardGrid.ItemTemplate>
+                </controls:VirtualizedCardGrid>
+            </Grid>
         </Grid>
     </Grid>
 </controls:CardGridViewBase>

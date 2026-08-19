@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/JmComic.App/JmComic.App.csproj" />
     <Project Path="src/JmComic.Core/JmComic.Core.csproj" />
+    <Project Path="src/Copymanga.App/Copymanga.App.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/JmComic.Core.Tests/JmComic.Core.Tests.csproj" />

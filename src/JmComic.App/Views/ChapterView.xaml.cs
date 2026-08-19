@@ -33,7 +33,10 @@ public partial class ChapterView : UserControl
     private ComicDetail? _detail;
     private bool _isFavorite;
     private readonly Dictionary<string, Chapter> _chapterMap = new();
-    private readonly Dictionary<string, ChapterCardViewModel> _cardMap = new();
+
+    /// <summary>章节卡单元格尺寸（卡片 158x54 + 边距 10），框选命中按此换算。</summary>
+    private const double ChapterCellWidth = 168;
+    private const double ChapterCellHeight = 64;
 
     private Point _dragStart;
     private bool _isDragging;
@@ -69,7 +72,6 @@ public partial class ChapterView : UserControl
 
             Chapters.Clear();
             _chapterMap.Clear();
-            _cardMap.Clear();
             var chapterIndex = 0;
             foreach (var chapter in detail.Chapters)
             {
@@ -83,7 +85,6 @@ public partial class ChapterView : UserControl
                 };
                 Chapters.Add(card);
                 _chapterMap[chapter.Id] = chapter;
-                _cardMap[chapter.Id] = card;
             }
             UpdateSelectedText();
             ReadAllButton.IsEnabled = detail.Chapters.Count > 0;
@@ -189,40 +190,36 @@ public partial class ChapterView : UserControl
 
     private void ApplySelectionToCards(Rect selection)
     {
-        // 框选只追加选中，不清除已选章节；清空请使用页面上的"清空"按钮
-        foreach (var card in Chapters)
+        // 章节卡为固定 158x54 + 边距 10 → 单元格 168x64；行由虚拟化网格按列数切分。
+        // 直接用「行列 → 下标」换算命中范围（O(命中区域)），不再遍历全部章节或依赖
+        // 已实例化容器（虚拟化后离屏章节本就没有容器），避免拖拽时逐帧 TransformToVisual。
+        var columns = Math.Max(1, ChapterItems.Columns);
+        if (columns <= 0 || Chapters.Count == 0)
         {
-            if (TryGetCardRect(card, out var cardRect) && selection.IntersectsWith(cardRect))
-            {
-                card.IsSelected = true;
-            }
+            return;
         }
-    }
+        var origin = ChapterItems.TranslatePoint(new Point(0, 0), SelectionCanvas);
+        origin.Y -= ChapterItems.VerticalOffset;
 
-    private bool TryGetCardRect(ChapterCardViewModel card, out Rect rect)
-    {
-        rect = default;
-        var container = ChapterItems.ItemContainerGenerator.ContainerFromItem(card) as FrameworkElement;
-        if (container is null)
+        var left = selection.Left - origin.X;
+        var top = selection.Top - origin.Y;
+        var right = selection.Right - origin.X;
+        var bottom = selection.Bottom - origin.Y;
+
+        var firstCol = Math.Max(0, (int)Math.Floor(left / ChapterCellWidth));
+        var lastCol = Math.Min(columns - 1, (int)Math.Floor(right / ChapterCellWidth));
+        var firstRow = Math.Max(0, (int)Math.Floor(top / ChapterCellHeight));
+        var lastRow = Math.Min((Chapters.Count - 1) / columns, (int)Math.Floor(bottom / ChapterCellHeight));
+        for (var row = firstRow; row <= lastRow; row++)
         {
-            return false;
-        }
-        var cardElement = FindVisualChild<Border>(container, b => b.DataContext == card);
-        if (cardElement is null)
-        {
-            return false;
-        }
-        // SelectionCanvas 与章节列表是兄弟节点，用 TransformToVisual 计算相对坐标；
-        // 章节列表重建/回收时容器可能已脱离视觉树（此时会抛异常），捕获后跳过该卡片
-        try
-        {
-            var transform = cardElement.TransformToVisual(SelectionCanvas);
-            rect = transform.TransformBounds(new Rect(0, 0, cardElement.ActualWidth, cardElement.ActualHeight));
-            return true;
-        }
-        catch (InvalidOperationException)
-        {
-            return false;
+            for (var col = firstCol; col <= lastCol; col++)
+            {
+                var index = row * columns + col;
+                if (index >= 0 && index < Chapters.Count)
+                {
+                    Chapters[index].IsSelected = true;
+                }
+            }
         }
     }
 
@@ -409,25 +406,6 @@ public partial class ChapterView : UserControl
                 return match;
             }
             child = VisualTreeHelper.GetParent(child);
-        }
-        return null;
-    }
-
-    private static T? FindVisualChild<T>(DependencyObject parent, Func<T, bool>? predicate = null)
-        where T : DependencyObject
-    {
-        var count = VisualTreeHelper.GetChildrenCount(parent);
-        for (var i = 0; i < count; i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is T match && (predicate is null || predicate(match)))
-            {
-                return match;
-            }
-            if (FindVisualChild(child, predicate) is T deeper)
-            {
-                return deeper;
-            }
         }
         return null;
     }

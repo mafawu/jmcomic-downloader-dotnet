@@ -43,15 +43,23 @@ public static class ThemeManager
             for (var i = 0; i < merged.Count; i++)
             {
                 var source = merged[i].Source?.OriginalString;
-                if (source is not null &&
-                    (source.EndsWith("Colors.xaml") || source.EndsWith("DarkColors.xaml")))
+                if (source is null ||
+                    (!source.EndsWith("Colors.xaml") && !source.EndsWith("DarkColors.xaml")))
                 {
-                    merged[i] = new ResourceDictionary
-                    {
-                        Source = new Uri("Themes/" + (isDark ? "DarkColors.xaml" : "Colors.xaml"), UriKind.Relative),
-                    };
-                    break;
+                    continue;
                 }
+                // 兼容两种来源：
+                //  - 主程序：相对 URI "Themes/Colors.xaml"（本程序集）
+                //  - 派生 exe（copymanga 版）：绝对 pack URI 指向 JmComic.App 程序集
+                // 替换时保持与源相同的 URI 形式，确保跨程序集也能解析。
+                var newSource = source.Contains(";component/")
+                    ? $"pack://application:,,,/JmComic.App;component/Themes/{(isDark ? "DarkColors.xaml" : "Colors.xaml")}"
+                    : "Themes/" + (isDark ? "DarkColors.xaml" : "Colors.xaml");
+                merged[i] = new ResourceDictionary
+                {
+                    Source = new Uri(newSource, UriKind.RelativeOrAbsolute),
+                };
+                break;
             }
         }
         Save();

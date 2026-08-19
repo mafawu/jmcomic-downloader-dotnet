@@ -359,7 +359,7 @@ public partial class LocalView : CardGridViewBase
             items.Add(ToCard(_filtered[start + i]));
         }
         LocalItems.ItemsSource = items;
-        ResultScroller.ScrollToTop();
+        LocalItems.ScrollToTop();
     }
 
     /// <summary>更新分页状态（页码/总页数/按钮可用性）。</summary>
