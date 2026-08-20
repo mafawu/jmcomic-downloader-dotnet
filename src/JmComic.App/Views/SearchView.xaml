@@ -83,33 +83,123 @@
             </controls:VirtualizedCardGrid>
         </DataTemplate>
 
-        <!-- 来源筛选 Tab 胶囊 -->
-        <Style x:Key="FilterTabStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Padding" Value="12,5" />
+                <!-- 来源筛选 Tab 胶囊（统一 28高10圆角描边，与分类页胶囊一致） -->
+        <Style x:Key="SearchTextBoxStyle" TargetType="TextBox">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="999"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost" Background="Transparent" BorderThickness="0" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="FilterMultiTabStyle" TargetType="ToggleButton">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}"
+                                MinHeight="{TemplateBinding MinHeight}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBgBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CardHoverBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimarySubtleBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
                                 <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="FilterTabStyle" TargetType="RadioButton">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}"
+                                MinHeight="{TemplateBinding MinHeight}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CardHoverBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimarySubtleBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
 
         <Style x:Key="StateHostStyle" TargetType="ContentControl">
             <Setter Property="ContentTemplate" Value="{StaticResource HintStateTemplate}" />
@@ -146,39 +236,57 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
-                    <Grid Margin="0,0,10,0">
-                        <TextBox x:Name="KeywordBox" Style="{StaticResource ModernTextBoxStyle}"
-                                 MinWidth="120" Padding="36,9,30,9"
-                                 KeyDown="KeywordBox_KeyDown"
-                                 GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus"
-                                 TextChanged="KeywordBox_TextChanged"
-                                 VerticalContentAlignment="Center"
-                                 ToolTip="输入漫画名称 / ID / 作者搜索" />
-                        <Path Data="{StaticResource IconSearch}" Stroke="{DynamicResource TextDisabledBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="15" Height="15" Margin="13,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                        <TextBlock x:Name="KeywordPlaceholder" Text="输入漫画名称 / ID / 作者搜索" FontSize="12.5"
-                                   Foreground="{DynamicResource TextDisabledBrush}"
-                                   IsHitTestVisible="False" Margin="36,0,0,0"
-                                   VerticalAlignment="Center" HorizontalAlignment="Left" />
-                        <Button x:Name="ClearKeywordButton" Style="{StaticResource IconButtonStyle}"
-                                ToolTip="清除" Click="ClearKeywordButton_Click"
-                                HorizontalAlignment="Right" Margin="0,0,4,0"
-                                VerticalAlignment="Center" Padding="7" FontSize="12">
-                            <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" />
-                        </Button>
-                    </Grid>
+                    <Border x:Name="SearchFieldBd" Height="42" CornerRadius="10"
+                            Background="{DynamicResource AppBackgroundBrush}"
+                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
+                            Margin="0,0,10,0" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, ElementName=SearchFieldBd}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsKeyboardFocused, ElementName=KeywordBox}" Value="True">
+                                        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Path Grid.Column="0" Data="{StaticResource IconSearch}" Stroke="{DynamicResource TextDisabledBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="16" Height="16" Margin="14,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False" />
+                            <Grid Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <TextBox x:Name="KeywordBox" Style="{StaticResource SearchTextBoxStyle}"
+                                         MinWidth="120"
+                                         KeyDown="KeywordBox_KeyDown" GotFocus="KeywordBox_GotFocus" LostFocus="KeywordBox_LostFocus" TextChanged="KeywordBox_TextChanged"
+                                         VerticalContentAlignment="Center" ToolTip="输入漫画名称 / ID / 作者搜索" />
+                                <TextBlock x:Name="KeywordPlaceholder" Text="输入漫画名称 / ID / 作者搜索" FontSize="12.5" Foreground="{DynamicResource TextDisabledBrush}" IsHitTestVisible="False" VerticalAlignment="Center" />
+                            </Grid>
+                            <Button x:Name="ClearKeywordButton" Grid.Column="2" Style="{StaticResource IconButtonStyle}" ToolTip="清除" Click="ClearKeywordButton_Click" VerticalAlignment="Center" Margin="4,0,6,0" Padding="0" Width="28" Height="28">
+                                <Border Width="22" Height="22" CornerRadius="11" Background="{DynamicResource HoverBgBrush}">
+                                    <Path Data="{StaticResource IconClose}" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="10" Height="10" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </Button>
+                        </Grid>
+                    </Border>
 
-                    <StackPanel Grid.Column="1" Orientation="Horizontal"
-                                VerticalAlignment="Center">
-                        <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                 VerticalAlignment="Center" />
-                        <Button Margin="12,0,0,0"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                Padding="22,9"
-                                Content="搜索" Click="SearchButton_Click" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}" VerticalAlignment="Center" />
+                        <Button Margin="12,0,0,0" Style="{StaticResource PrimaryButtonStyle}" Height="42" MinWidth="96" Padding="0" Click="SearchButton_Click">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Path Data="{StaticResource IconSearch}" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="14" Height="14" VerticalAlignment="Center" />
+                                <TextBlock Text="搜索" FontSize="13" FontWeight="SemiBold" Foreground="White" Margin="6,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </Grid>
 
-                <StackPanel x:Name="SourceTabs" Orientation="Horizontal" Margin="0,14,0,0" />
+                <WrapPanel x:Name="SourceTabs" Orientation="Horizontal" Margin="0,14,0,0" />
             </StackPanel>
         </Border>
 

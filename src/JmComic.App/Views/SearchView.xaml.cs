@@ -22,12 +22,14 @@ public partial class SearchView : CardGridViewBase
     private readonly LocalLibraryService _localLibrary;
 
     private HashSet<string> _downloadedKeys = new();
-    private IComicSource? _filterSource;
     private long _page = 1;
     private int _searchVersion;
     private CancellationTokenSource? _searchCts;
     private string _cachedKeyword = "";
     private readonly Dictionary<string, Dictionary<long, SourceSearchGroup>> _sourcePageCache = new();
+    private readonly object _cacheLock = new();
+    private System.Windows.Controls.Primitives.ToggleButton _allTab = null!;
+    private readonly List<System.Windows.Controls.Primitives.ToggleButton> _sourceTabs = new();
 
     public ObservableCollection<AlbumCardViewModel> Results { get; } = new();
 
@@ -56,37 +58,55 @@ public partial class SearchView : CardGridViewBase
 
     private void BuildSourceTabs()
     {
+        _sourceTabs.Clear();
+        SourceTabs.Children.Clear();
+        _allTab = new System.Windows.Controls.Primitives.ToggleButton
+        {
+            Style = (Style)FindResource("FilterMultiTabStyle"),
+            Content = "全部",
+            IsChecked = true,
+            Margin = new Thickness(0, 0, 6, 6),
+        };
+        _allTab.Click += AllTab_Click;
+        SourceTabs.Children.Add(_allTab);
         foreach (var source in _sourceManager.Sources)
         {
-            var isFirst = SourceTabs.Children.Count == 0;
-            var tab = new RadioButton
+            var tab = new System.Windows.Controls.Primitives.ToggleButton
             {
-                Style = (Style)FindResource("FilterTabStyle"),
+                Style = (Style)FindResource("FilterMultiTabStyle"),
                 Content = source.Info.DisplayName,
                 Tag = source,
-                IsChecked = isFirst,
-                Margin = isFirst ? new Thickness(0) : new Thickness(8, 0, 0, 0),
+                IsChecked = true,
+                Margin = new Thickness(0, 0, 6, 6),
             };
-            tab.Click += SourceTab_Click;
+            tab.Click += SourceToggle_Click;
             SourceTabs.Children.Add(tab);
-        }
-        _filterSource = _sourceManager.Sources.FirstOrDefault();
-        if (_filterSource != null)
-        {
-            _sourceManager.Current = _filterSource;
+            _sourceTabs.Add(tab);
         }
     }
 
-    private void SourceTab_Click(object sender, RoutedEventArgs e)
+    private void AllTab_Click(object sender, RoutedEventArgs e)
     {
-        var source = (sender as RadioButton)?.Tag as IComicSource;
-        if (source == null) return;
-        _filterSource = source;
-        _sourceManager.Current = source;
+        var isChecked = _allTab.IsChecked == true;
+        foreach (var t in _sourceTabs)
+            t.IsChecked = isChecked;
         if (!string.IsNullOrWhiteSpace(KeywordBox.Text))
-        {
             _ = SearchAsync(_page);
-        }
+    }
+
+    private void SourceToggle_Click(object sender, RoutedEventArgs e)
+    {
+        var allChecked = _sourceTabs.All(t => t.IsChecked == true);
+        _allTab.IsChecked = allChecked;
+        if (!string.IsNullOrWhiteSpace(KeywordBox.Text))
+            _ = SearchAsync(_page);
+    }
+
+    private IReadOnlyList<IComicSource> GetSelectedSources()
+    {
+        if (_allTab.IsChecked == true)
+            return _sourceManager.Sources;
+        return _sourceTabs.Where(t => t.IsChecked == true).Select(t => (IComicSource)t.Tag!).ToList();
     }
 
     private void KeywordBox_KeyDown(object sender, KeyEventArgs e)
@@ -134,8 +154,6 @@ public partial class SearchView : CardGridViewBase
 
     private void NextButton_Click(object sender, RoutedEventArgs e) => _ = SearchAsync(_page + 1);
 
-    private IComicSource SelectedSource => _filterSource ?? _sourceManager.Current;
-
     private async Task SearchAsync(long page, bool force = false)
     {
         var keyword = KeywordBox.Text.Trim();
@@ -146,6 +164,13 @@ public partial class SearchView : CardGridViewBase
         }
         if (page < 1) return;
 
+        var selected = GetSelectedSources();
+        if (selected.Count == 0)
+        {
+            ToastService.Show("请至少选择一个源", ToastKind.Info);
+            return;
+        }
+
         _searchCts?.Cancel();
         _searchCts?.Dispose();
         _searchCts = new CancellationTokenSource();
@@ -155,11 +180,10 @@ public partial class SearchView : CardGridViewBase
         var version = ++_searchVersion;
         if (force || keyword != _cachedKeyword)
         {
-            _sourcePageCache.Clear();
+            lock (_cacheLock) _sourcePageCache.Clear();
             _cachedKeyword = keyword;
         }
 
-        var source = SelectedSource;
         SetBusy(true);
         try
         {
@@ -174,9 +198,21 @@ public partial class SearchView : CardGridViewBase
             catch { }
             if (searchCt.IsCancellationRequested) return;
 
-            var (group, fromCache) = await GetOrSearchSourceAsync(source, keyword, (int)page, searchCt);
-            if (version != _searchVersion || searchCt.IsCancellationRequested) return;
-            RenderSingle(group, page, showError: !fromCache);
+            if (selected.Count == 1)
+            {
+                var (group, fromCache) = await GetOrSearchSourceAsync(selected[0], keyword, (int)page, searchCt);
+                if (version != _searchVersion || searchCt.IsCancellationRequested) return;
+                RenderSingle(group, page, showError: !fromCache);
+            }
+            else
+            {
+                var tasks = selected.Select(s => GetOrSearchSourceAsync(s, keyword, (int)page, searchCt)).ToArray();
+                var results = await Task.WhenAll(tasks);
+                if (version != _searchVersion || searchCt.IsCancellationRequested) return;
+                var groups = results.Select(r => r.Group).ToList();
+                var anyNotCached = results.Any(r => !r.FromCache);
+                RenderAggregate(groups, page, showError: anyNotCached);
+            }
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -208,10 +244,13 @@ public partial class SearchView : CardGridViewBase
 
     private bool TryGetCachedGroup(string sourceId, int page, out SourceSearchGroup group)
     {
-        if (_sourcePageCache.TryGetValue(sourceId, out var pages) && pages.TryGetValue(page, out var cached))
+        lock (_cacheLock)
         {
-            group = cached;
-            return true;
+            if (_sourcePageCache.TryGetValue(sourceId, out var pages) && pages.TryGetValue(page, out var cached))
+            {
+                group = cached;
+                return true;
+            }
         }
         group = null!;
         return false;
@@ -219,12 +258,59 @@ public partial class SearchView : CardGridViewBase
 
     private void StoreGroup(SourceSearchGroup group, int page)
     {
-        if (!_sourcePageCache.TryGetValue(group.Source.Info.Id, out var pages))
+        lock (_cacheLock)
         {
-            pages = new Dictionary<long, SourceSearchGroup>();
-            _sourcePageCache[group.Source.Info.Id] = pages;
+            if (!_sourcePageCache.TryGetValue(group.Source.Info.Id, out var pages))
+            {
+                pages = new Dictionary<long, SourceSearchGroup>();
+                _sourcePageCache[group.Source.Info.Id] = pages;
+            }
+            pages[page] = group;
         }
-        pages[page] = group;
+    }
+
+    private void RenderAggregate(IReadOnlyList<SourceSearchGroup> groups, long page, bool showError)
+    {
+        var singles = new List<SourceSearchGroup>();
+        long maxPages = 1;
+        bool hasItems = false;
+        Results.Clear();
+        foreach (var g in groups)
+        {
+            var result = g.Result;
+            if (result == null)
+            {
+                if (showError)
+                    ToastService.Show($"{g.Source.Info.DisplayName} 搜索失败", ToastKind.Error);
+                continue;
+            }
+            maxPages = Math.Max(maxPages, result.TotalPages);
+            if (result.IsSingleMatch && result.SingleComicId is not null)
+            {
+                singles.Add(g);
+                continue;
+            }
+            if (result.Items.Count == 0) continue;
+            hasItems = true;
+            foreach (var item in result.Items)
+                Results.Add(ToCard(item, g.Source, true));
+        }
+        if (!hasItems)
+        {
+            if (singles.Count == 1)
+            {
+                ShowState(State.Result);
+                Navigation.OpenComic(singles[0].Source.Info.Id, singles[0].Result!.SingleComicId!);
+                return;
+            }
+            if (singles.Count > 1)
+            {
+                ToastService.Show($"多个源命中单本：{string.Join("、", singles.Select(s => s.Source.Info.DisplayName))}", ToastKind.Info);
+            }
+            ShowState(State.Empty);
+            return;
+        }
+        UpdatePaging(page, maxPages);
     }
 
     private void RenderSingle(SourceSearchGroup group, long page, bool showError)

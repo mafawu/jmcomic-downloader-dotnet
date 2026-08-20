@@ -103,30 +103,49 @@
             </Style.Triggers>
         </Style>
 
-        <!-- 侧栏分类胶囊（RadioButton，选中高亮，同一 GroupName 互斥） -->
-        <Style x:Key="SidebarCategoryPillStyle" TargetType="RadioButton">
+        <!-- 统一主题胶囊：分类 Radio 与标签 Button 共用 28高10圆角1px边框风格 -->
+        <Style x:Key="ThemePillRadioStyle" TargetType="RadioButton">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FontSize" Value="12.5" />
-            <Setter Property="Padding" Value="10,5" />
-            <Setter Property="Margin" Value="0,2,8,2" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="True" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent" CornerRadius="8"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="Center" />
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}"
+                                MinHeight="{TemplateBinding MinHeight}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBgBrush}" />
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CardHoverBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimarySubtleBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
                                 <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -134,44 +153,71 @@
             </Setter>
         </Style>
 
-        <!-- 标签胶囊 -->
+        <Style x:Key="ThemePillButtonStyle" TargetType="Button">
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource CardBorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinHeight" Value="28" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Margin" Value="0,0,6,6" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="UseLayoutRounding" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="10"
+                                Padding="{TemplateBinding Padding}"
+                                MinHeight="{TemplateBinding MinHeight}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource CardHoverBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource CardHoverBorderBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverBgBrush}" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource DividerStrongBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 兼容旧 Key：原 SidebarCategoryPillStyle 保留指向统一 Radio 胶囊，避免外部引用失效 -->
+        <Style x:Key="SidebarCategoryPillStyle" TargetType="RadioButton" BasedOn="{StaticResource ThemePillRadioStyle}" />
+
+        <!-- 标签胶囊（Button，统一为 28高描边胶囊） -->
         <DataTemplate x:Key="TagEntryTemplate">
-            <Button Style="{StaticResource PillGhostButtonStyle}" Content="{Binding Name}"
-                    Tag="{Binding}" Padding="10,4" FontSize="12" Margin="0,0,8,6"
-                    Click="Entry_Click" />
+            <Button Style="{StaticResource ThemePillButtonStyle}" Content="{Binding Name}" Tag="{Binding}" Click="Entry_Click" />
         </DataTemplate>
 
-        <!-- 子分类胶囊（无下一级） -->
+        <!-- 子分类胶囊（Radio，统一风格，无额外缩进由外层 Wrap 统一流式） -->
         <DataTemplate x:Key="CategoryChildTemplate">
-            <RadioButton Style="{StaticResource SidebarCategoryPillStyle}"
-                         GroupName="CategoryNav" Content="{Binding Name}" Tag="{Binding}"
-                         FontSize="12" Margin="0,2,8,2" Padding="10,4"
-                         Click="Entry_Click" />
+            <RadioButton Style="{StaticResource ThemePillRadioStyle}" GroupName="CategoryNav" Content="{Binding Name}" Tag="{Binding}" Click="Entry_Click" />
         </DataTemplate>
 
-        <!-- 分类条目：父分类胶囊 + 缩进的子分类 -->
+        <!-- 分类条目：父胶囊 + 子胶囊流（6px 间距，8px 上边距分隔） -->
         <DataTemplate x:Key="CategoryEntryTemplate">
-            <StackPanel Margin="0,0,8,6">
-                <RadioButton Style="{StaticResource SidebarCategoryPillStyle}"
-                             GroupName="CategoryNav" Content="{Binding Name}" Tag="{Binding}"
-                             IsChecked="{Binding IsDefault}"
-                             Click="Entry_Click" />
-                <ItemsControl ItemsSource="{Binding Children}"
-                              ItemTemplate="{StaticResource CategoryChildTemplate}"
-                              Margin="16,2,0,0" />
-            </StackPanel>
-        </DataTemplate>
-
-        <views:ThemeEntryTemplateSelector x:Key="EntryTemplateSelector"
-                                          CategoryTemplate="{StaticResource CategoryEntryTemplate}"
-                                          TagTemplate="{StaticResource TagEntryTemplate}" />
-
-        <!-- 分区模板：标题 + 条目流 -->
-        <DataTemplate x:Key="SectionTemplate">
-            <StackPanel Margin="0,0,0,16">
-                <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" />
-                <ItemsControl Margin="0,8,0,0" ItemsSource="{Binding Entries}"
-                              ItemTemplateSelector="{StaticResource EntryTemplateSelector}">
+            <StackPanel Margin="0,0,0,2">
+                <RadioButton Style="{StaticResource ThemePillRadioStyle}" GroupName="CategoryNav" Content="{Binding Name}" Tag="{Binding}" IsChecked="{Binding IsDefault}" Click="Entry_Click" />
+                <ItemsControl ItemsSource="{Binding Children}" ItemTemplate="{StaticResource CategoryChildTemplate}" Margin="0,6,0,0">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel />
@@ -180,6 +226,35 @@
                 </ItemsControl>
             </StackPanel>
         </DataTemplate>
+
+        <views:ThemeEntryTemplateSelector x:Key="EntryTemplateSelector"
+                                          CategoryTemplate="{StaticResource CategoryEntryTemplate}"
+                                          TagTemplate="{StaticResource TagEntryTemplate}" />
+
+<!-- 分区：标题左装 3px 主色竖条 + 分隔线 + Wrap 流式胶囊 -->
+        <DataTemplate x:Key="SectionTemplate">
+            <StackPanel Margin="0,0,0,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Width="3" Height="13" CornerRadius="2" Background="{DynamicResource PrimaryBrush}" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="12.5" FontWeight="SemiBold" Margin="8,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" />
+                </Grid>
+                <Border Height="1" Background="{DynamicResource DividerBrush}" Opacity="0.7" Margin="0,8,0,10" />
+                <ItemsControl ItemsSource="{Binding Entries}" ItemTemplateSelector="{StaticResource EntryTemplateSelector}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+        </DataTemplate>
+
+
+
 
         
     </UserControl.Resources>

@@ -26,6 +26,8 @@ public partial class LocalView : CardGridViewBase
 
     private readonly ConfigService _config;
     private readonly LocalLibraryService _localLibrary;
+    private readonly SourceManager _sourceManager;
+    private string _filterSourceId = "";
 
     private bool _hasLoaded;
     private Dictionary<string, List<LocalComic>>? _cacheRoots;
@@ -47,6 +49,12 @@ public partial class LocalView : CardGridViewBase
         InitializeComponent();
         _config = App.Services.GetRequiredService<ConfigService>();
         _localLibrary = App.Services.GetRequiredService<LocalLibraryService>();
+        _sourceManager = App.Services.GetRequiredService<SourceManager>();
+        SourceFilterBox.Items.Add(new ComboBoxItem { Content = "全部", Tag = "", IsSelected = true });
+        foreach (var src in _sourceManager.Sources)
+        {
+            SourceFilterBox.Items.Add(new ComboBoxItem { Content = src.Info.DisplayName, Tag = src.Info.Id });
+        }
         PageSizeBox.Items.Add(new ComboBoxItem { Content = "每页 20", Tag = "20" });
         PageSizeBox.Items.Add(new ComboBoxItem { Content = "每页 30", Tag = "30", IsSelected = true });
         PageSizeBox.Items.Add(new ComboBoxItem { Content = "每页 40", Tag = "40" });
@@ -427,6 +435,22 @@ public partial class LocalView : CardGridViewBase
         }
     }
 
+    private void SourceFilterBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SourceFilterBox.SelectedItem is ComboBoxItem { Tag: string tag })
+        {
+            _filterSourceId = tag ?? "";
+        }
+        else
+        {
+            _filterSourceId = "";
+        }
+        if (_hasLoaded)
+        {
+            RebuildFilter();
+        }
+    }
+
     /// <summary>应用本地搜索条件（关键字 + 标签），实时过滤列表。</summary>
     public void ApplySearch(string keyword, IReadOnlyCollection<string> tags)
     {
@@ -473,6 +497,14 @@ public partial class LocalView : CardGridViewBase
 
     private bool MatchesFilter(LocalComic comic)
     {
+        if (!string.IsNullOrEmpty(_filterSourceId))
+        {
+            var effectiveId = string.IsNullOrEmpty(comic.SourceId) ? "jm" : comic.SourceId;
+            if (!string.Equals(effectiveId, _filterSourceId, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
         if (_selectedTags.Count > 0 && !comic.Tags.Any(t => _selectedTags.Contains(t)))
         {
             return false;
