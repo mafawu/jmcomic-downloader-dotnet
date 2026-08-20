@@ -79,9 +79,7 @@
                         Click="RefreshButton_Click" />
             </StackPanel>
 
-            <ScrollViewer x:Name="ResultScroller" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
-                <controls:VirtualizedCardGrid x:Name="LocalItems" SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=views:LocalView}}" CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}"><controls:VirtualizedCardGrid.ItemTemplate><DataTemplate><controls:LocalComicCard HorizontalAlignment="Center" Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" /></DataTemplate></controls:VirtualizedCardGrid.ItemTemplate></controls:VirtualizedCardGrid>
-            </ScrollViewer>
+            <controls:VirtualizedCardGrid x:Name="LocalItems" Visibility="Collapsed" SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=views:LocalView}}" CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}"><controls:VirtualizedCardGrid.ItemTemplate><DataTemplate><controls:LocalComicCard HorizontalAlignment="Center" Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" /></DataTemplate></controls:VirtualizedCardGrid.ItemTemplate></controls:VirtualizedCardGrid>
         </Grid>
 
         <!-- 分页 -->

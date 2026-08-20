@@ -560,6 +560,6 @@ public partial class LocalView : CardGridViewBase
         NoDirsPanel.Visibility = state == State.NoDirs ? Visibility.Visible : Visibility.Collapsed;
         LoadingPanel.Visibility = state == State.Loading ? Visibility.Visible : Visibility.Collapsed;
         EmptyPanel.Visibility = state == State.Empty ? Visibility.Visible : Visibility.Collapsed;
-        ResultScroller.Visibility = state == State.Result ? Visibility.Visible : Visibility.Collapsed;
+        LocalItems.Visibility = state == State.Result ? Visibility.Visible : Visibility.Collapsed;
     }
 }
