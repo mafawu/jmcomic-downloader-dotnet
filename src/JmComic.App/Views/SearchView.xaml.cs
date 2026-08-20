@@ -115,6 +115,12 @@ public partial class SearchView : CardGridViewBase
         ClearKeywordButton.Visibility = hasText ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    public void Search(string keyword)
+    {
+        KeywordBox.Text = keyword;
+        _ = SearchAsync(1, force: true);
+    }
+
     private void SearchButton_Click(object sender, RoutedEventArgs e) => _ = SearchAsync(1, force: true);
     private void ClearKeywordButton_Click(object sender, RoutedEventArgs e)
     {

@@ -97,12 +97,11 @@ public partial class FavoriteView : CardGridViewBase
             return;
         }
         _page = page;
-        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
         FavoriteLoading.Visibility = Visibility.Visible;
         FavoriteEmpty.Visibility = Visibility.Collapsed;
         FavoriteScroller.Visibility = Visibility.Collapsed;
         FavoritePaging.Visibility = Visibility.Collapsed;
-
+        try { var dir = _config.Current.DownloadDir; _downloadedKeys = await Task.Run(() => _localLibrary.GetDownloadedKeys(dir)); } catch { _downloadedKeys = new HashSet<string>(); }
         try
         {
             // folder_id=0 表示默认收藏夹

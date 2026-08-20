@@ -7,32 +7,27 @@ using System.Windows.Threading;
 
 namespace JmComic.App.Controls;
 
-/// <summary>
-/// 虚拟化卡片网格：把条目按槽位宽切成等宽行，行用 VirtualizingStackPanel 做真正的 UI 虚拟化，
-/// 滚动时只实例化可视行并回收复用容器，行内卡片由 <see cref="ItemTemplate"/> 渲染。
-/// 相比「ScrollViewer + ItemsControl + WrapPanel/UniformGrid」（全部一次性实例化），
-/// 大列表的内存占用与滚动开销大幅降低。
-/// </summary>
 public partial class VirtualizedCardGrid : UserControl
 {
     public static readonly DependencyProperty ItemsSourceProperty = DependencyProperty.Register(
         nameof(ItemsSource), typeof(IEnumerable), typeof(VirtualizedCardGrid),
         new PropertyMetadata(null, OnItemsSourceChanged));
 
-    /// <summary>单个条目占位宽度（卡片宽 + 间距），用于计算列数并切行。</summary>
     public static readonly DependencyProperty SlotWidthProperty = DependencyProperty.Register(
         nameof(SlotWidth), typeof(double), typeof(VirtualizedCardGrid),
         new PropertyMetadata(182.0, OnLayoutPropertyChanged));
 
-    /// <summary>卡片宽度（供行内卡片模板绑定）。</summary>
     public static readonly DependencyProperty CardWidthProperty = DependencyProperty.Register(
         nameof(CardWidth), typeof(double), typeof(VirtualizedCardGrid),
         new PropertyMetadata(168.0));
 
-    /// <summary>卡片数据模板（由宿主编排，如 AlbumCard / LocalComicCard / 章节卡）。</summary>
     public static readonly DependencyProperty ItemTemplateProperty = DependencyProperty.Register(
         nameof(ItemTemplate), typeof(DataTemplate), typeof(VirtualizedCardGrid),
         new PropertyMetadata(null));
+
+    public static readonly DependencyProperty DesiredColumnsProperty = DependencyProperty.Register(
+        nameof(DesiredColumns), typeof(int), typeof(VirtualizedCardGrid),
+        new PropertyMetadata(0, OnLayoutPropertyChanged));
 
     public IEnumerable? ItemsSource
     {
@@ -58,13 +53,16 @@ public partial class VirtualizedCardGrid : UserControl
         set => SetValue(ItemTemplateProperty, value);
     }
 
-    /// <summary>当前列数（供宿主编排/命中计算使用，如章节框选）。</summary>
+    public int DesiredColumns
+    {
+        get => (int)GetValue(DesiredColumnsProperty);
+        set => SetValue(DesiredColumnsProperty, value);
+    }
+
     public int Columns { get; private set; } = 1;
 
-    /// <summary>内部滚动容器当前垂直偏移（供宿主编排/命中计算使用）。</summary>
     public double VerticalOffset { get; private set; }
 
-    /// <summary>内部滚动位置变化时触发。</summary>
     public event EventHandler? Scrolled;
 
     private readonly ObservableCollection<List<object>> _rows = new();
@@ -92,7 +90,6 @@ public partial class VirtualizedCardGrid : UserControl
         IsVisibleChanged += (_, _) => ScheduleRebuild();
     }
 
-    /// <summary>回到顶部（内部滚动容器）。</summary>
     public void ScrollToTop() => _scroller?.ScrollToTop();
 
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -148,8 +145,16 @@ public partial class VirtualizedCardGrid : UserControl
     {
         var items = ItemsSource?.Cast<object>().ToList() ?? new List<object>();
         var width = ActualWidth;
-        var slot = SlotWidth > 0 ? SlotWidth : 182;
-        var columns = width <= 0 ? 1 : Math.Max(1, (int)Math.Floor((width + 14) / slot));
+        int columns;
+        if (DesiredColumns >= GridCellSizer.MinColumns && DesiredColumns <= GridCellSizer.MaxColumns)
+        {
+            columns = DesiredColumns;
+        }
+        else
+        {
+            var slot = SlotWidth > 0 ? SlotWidth : 182;
+            columns = width <= 0 ? 1 : Math.Max(1, (int)Math.Floor((width + GridCellSizer.Spacing) / slot));
+        }
         if (!_dirty && columns == Columns && items.Count == _lastCount)
         {
             return;

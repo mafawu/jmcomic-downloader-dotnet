@@ -133,9 +133,9 @@ public partial class CategoryBrowseView : CardGridViewBase
         }
         _categoryId = categoryId;
         _page = page;
-        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
         CurrentState = State.Loading;
         PagingPanel.Visibility = Visibility.Collapsed;
+        try { var dir = _config.Current.DownloadDir; _downloadedKeys = await Task.Run(() => _localLibrary.GetDownloadedKeys(dir)); } catch { _downloadedKeys = new HashSet<string>(); }
         try
         {
             var result = await _source.GetCategoryComicsAsync(categoryId, (int)page);

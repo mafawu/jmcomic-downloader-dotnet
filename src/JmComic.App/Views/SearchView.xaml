@@ -73,7 +73,7 @@
 
         <DataTemplate x:Key="ResultStateTemplate">
             <controls:VirtualizedCardGrid ItemsSource="{Binding Results, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                           CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <controls:VirtualizedCardGrid.ItemTemplate>
                     <DataTemplate>
@@ -169,7 +169,7 @@
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal"
                                 VerticalAlignment="Center">
-                        <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                  VerticalAlignment="Center" />
                         <Button Margin="12,0,0,0"
                                 Style="{StaticResource PrimaryButtonStyle}"
@@ -209,3 +209,5 @@
         </StackPanel>
     </Grid>
 </controls:CardGridViewBase>
+
+

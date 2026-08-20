@@ -177,8 +177,8 @@ public partial class CategoryView : CardGridViewBase
 
         _keyword = keyword;
         _page = page;
-        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
         SetBusy(true);
+        try { var dir = _config.Current.DownloadDir; _downloadedKeys = await Task.Run(() => _localLibrary.GetDownloadedKeys(dir)); } catch { _downloadedKeys = new HashSet<string>(); }
         try
         {
             // 顶级分类 + 空关键词：走分类过滤接口（精确）；子分类或带关键词：走搜索接口（路径 + 关键词）

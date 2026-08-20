@@ -75,7 +75,7 @@
         <!-- 结果态：卡片网格（虚拟化：只实例化可视行） -->
         <DataTemplate x:Key="ResultStateTemplate">
             <controls:VirtualizedCardGrid ItemsSource="{Binding Results, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                           CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <controls:VirtualizedCardGrid.ItemTemplate>
                     <DataTemplate>
@@ -283,14 +283,14 @@
                         </Button>
                     </Grid>
 
-                    <ComboBox x:Name="SortBox" Grid.Column="1" Width="120"
+                    <ComboBox x:Name="SortBox" Grid.Column="1" Style="{StaticResource SortPillComboBoxStyle}" Width="132"
                               SelectionChanged="SortBox_SelectionChanged">
                         <ComboBoxItem Content="最新发布" Tag="Latest" />
                         <ComboBoxItem Content="最多观看" Tag="View" />
                         <ComboBoxItem Content="图片最多" Tag="Picture" />
                         <ComboBoxItem Content="最多点赞" Tag="Like" />
                     </ComboBox>
-                    <ComboBox x:Name="PeriodBox" Grid.Column="2" Width="105" Margin="10,0,0,0"
+                    <ComboBox x:Name="PeriodBox" Grid.Column="2" Style="{StaticResource SortPillComboBoxStyle}" Width="128" Margin="10,0,0,0"
                               SelectionChanged="PeriodBox_SelectionChanged">
                         <ComboBoxItem Content="全部时间" Tag="All" />
                         <ComboBoxItem Content="今天" Tag="Today" />
@@ -301,7 +301,7 @@
                             Style="{StaticResource PrimaryButtonStyle}"
                             Content="搜索" Click="SearchButton_Click" />
                     <controls:CardSizeSlider Grid.Column="4" Margin="14,0,0,0"
-                                             CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                             Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                              VerticalAlignment="Center" />
                 </Grid>
             </Border>
@@ -333,4 +333,6 @@
         </Grid>
     </Grid>
 </controls:CardGridViewBase>
+
+
 

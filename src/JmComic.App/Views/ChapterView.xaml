@@ -5,71 +5,44 @@
     <UserControl.Resources>
         <!-- 章节卡模板（虚拟化网格 ItemTemplate 用；x:Name 需放在资源模板中才能正常注册） -->
         <DataTemplate x:Key="ChapterCardTemplate">
-            <Border x:Name="Card" Width="158" Height="54" Margin="0,0,10,10"
-                    CornerRadius="14"
+            <Border x:Name="Card" Width="168" Height="42" Margin="0,0,10,10"
+                    CornerRadius="10"
                     Background="{DynamicResource SurfaceBrush}"
                     BorderBrush="{DynamicResource CardBorderBrush}"
                     BorderThickness="1"
                     Cursor="Hand"
                     MouseLeftButtonDown="ChapterCard_MouseLeftButtonDown">
-                <Grid>
-                    <Rectangle x:Name="SelectedAccent" Width="3" RadiusX="1.5" RadiusY="1.5"
-                               Fill="{DynamicResource PrimaryBrush}"
-                               HorizontalAlignment="Left" Margin="0,8" Visibility="Collapsed" />
-                    <StackPanel Margin="12,0" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Title}" FontSize="12.5"
-                                   FontWeight="SemiBold"
-                                    MaxWidth="72"
-                                   TextTrimming="CharacterEllipsis" />
-                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                            <Border Style="{StaticResource StatusBadgeStyle}"
-                                    Background="{DynamicResource SuccessBrush}"
-                                    Padding="7,2" x:Name="DownloadedBadge"
-                                    Visibility="Collapsed">
-                                <TextBlock Text="已下载" FontSize="10"
-                                           Foreground="White" />
-                            </Border>
-                            <Border Style="{StaticResource StatusBadgeStyle}"
-                                    Background="{DynamicResource PrimaryLightBrush}"
-                                    Padding="7,2" Margin="6,0,0,0"
-                                    x:Name="DownloadingBadge"
-                                    Visibility="Collapsed">
-                                <TextBlock Text="下载中" FontSize="10"
-                                           Foreground="White" />
-                            </Border>
-                        </StackPanel>
-                    </StackPanel>
-                    <Button Style="{StaticResource IconButtonStyle}" Width="26" Height="34"
-                            HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Margin="0,0,4,0" ToolTip="在线阅读本章"
-                            Command="{Binding ReadCommand}">
-                        <Path Data="{StaticResource IconPlay}" Stroke="{DynamicResource TextPrimaryBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="12" Height="12" />
-                    </Button>
-                    <Border x:Name="SelectedCheck" Width="18" Height="18" CornerRadius="9"
-                            Background="{DynamicResource PrimaryBrush}"
-                            HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="0,6,6,0" Visibility="Collapsed">
-                        <Path Data="M 0 4 L 4 8 L 9 0" Stroke="White" StrokeThickness="2"
-                              StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                              StrokeLineJoin="Round"
-                              HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Grid Margin="11,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="9,0,6,0" TextTrimming="CharacterEllipsis"/>
+                    <Border Grid.Column="2" x:Name="SelectedCheck" Width="16" Height="16" CornerRadius="8"
+                            Background="{DynamicResource PrimaryBrush}" Visibility="Collapsed" VerticalAlignment="Center">
+                        <Path Data="M 0 4 L 4 8 L 9 0" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
+                    <Button Grid.Column="2" x:Name="ReadBtn" Style="{StaticResource IconButtonStyle}" Width="22" Height="22"
+                            ToolTip="在线阅读" Command="{Binding ReadCommand}" Visibility="Visible">
+                        <Path Data="{StaticResource IconPlay}" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1.6" Stretch="Uniform" Width="10" Height="10"/>
+                    </Button>
                 </Grid>
             </Border>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                    <Setter TargetName="DownloadedBadge" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                    <Setter TargetName="ReadBtn" Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsDownloading}" Value="True">
-                    <Setter TargetName="DownloadingBadge" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource PrimaryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter TargetName="Card" Property="Background"
-                            Value="{DynamicResource PrimarySubtleBrush}" />
-                    <Setter TargetName="Card" Property="BorderBrush"
-                            Value="{DynamicResource PrimaryBrush}" />
-                    <Setter TargetName="SelectedAccent" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Card" Property="Background" Value="{DynamicResource PrimarySubtleBrush}" />
+                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
                     <Setter TargetName="SelectedCheck" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="ReadBtn" Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
@@ -144,7 +117,7 @@
             </Grid.ContextMenu>
 
             <!-- 章节列表：虚拟化网格（只实例化可视行），框选命中由代码按固定单元格做行列换算 -->
-            <controls:VirtualizedCardGrid x:Name="ChapterItems" SlotWidth="168"
+            <controls:VirtualizedCardGrid x:Name="ChapterItems" SlotWidth="178"
                                           ItemTemplate="{StaticResource ChapterCardTemplate}" />
 
             <Canvas x:Name="SelectionCanvas" IsHitTestVisible="False" ClipToBounds="True">

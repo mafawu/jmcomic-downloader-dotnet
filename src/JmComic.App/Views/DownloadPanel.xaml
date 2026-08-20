@@ -75,7 +75,7 @@
         <!-- 任务列表 -->
         <Grid Grid.Row="2">
             <StackPanel x:Name="EmptyHint" VerticalAlignment="Center" HorizontalAlignment="Center">
-                <Border Width="72" Height="72" CornerRadius="24"
+                <Border Width="72" Height="72" CornerRadius="14"
                         Background="{DynamicResource PrimarySubtleBrush}">
                     <Path Data="{StaticResource IconDownload}" Stroke="{DynamicResource PrimaryBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Stretch="Uniform" Width="26" Height="26" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 </Border>

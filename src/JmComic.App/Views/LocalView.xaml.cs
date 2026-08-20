@@ -37,6 +37,7 @@ public partial class LocalView : CardGridViewBase
     private bool _loading;
     private bool _backfilling;
     private string _keyword = "";
+    private string _sortTag = "ModifiedDesc";
     private HashSet<string> _selectedTags = new(StringComparer.OrdinalIgnoreCase);
     private LocalSearchPanel? _searchPanel;
     private readonly HashSet<string> _translationAttempted = new(StringComparer.OrdinalIgnoreCase);
@@ -410,6 +411,22 @@ public partial class LocalView : CardGridViewBase
         }
     }
 
+    private void SortBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SortBox.SelectedItem is ComboBoxItem { Tag: string tag })
+        {
+            _sortTag = tag;
+        }
+        else if (SortBox.SelectedItem is ComboBoxItem c && c.Content is string s)
+        {
+            _sortTag = s;
+        }
+        if (_hasLoaded)
+        {
+            RebuildFilter();
+        }
+    }
+
     /// <summary>应用本地搜索条件（关键字 + 标签），实时过滤列表。</summary>
     public void ApplySearch(string keyword, IReadOnlyCollection<string> tags)
     {
@@ -424,7 +441,16 @@ public partial class LocalView : CardGridViewBase
     /// <summary>按关键字（漫画名/中文名/作者/标签）与已选标签重建过滤结果。</summary>
     private void RebuildFilter()
     {
-        _filtered = _allComics.Where(MatchesFilter).ToList();
+        var query = _allComics.Where(MatchesFilter);
+        _filtered = _sortTag switch
+        {
+            "ModifiedAsc" => query.OrderBy(c => c.ModifiedAt).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            "NameAsc" => query.OrderBy(c => c.NameCn, StringComparer.OrdinalIgnoreCase).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            "NameDesc" => query.OrderByDescending(c => c.NameCn, StringComparer.OrdinalIgnoreCase).ThenByDescending(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            "ChapterDesc" => query.OrderByDescending(c => c.ChapterCount).ThenByDescending(c => c.ModifiedAt).ToList(),
+            "ImageDesc" => query.OrderByDescending(c => c.ImageCount).ThenByDescending(c => c.ModifiedAt).ToList(),
+            _ => query.OrderByDescending(c => c.ModifiedAt).ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+        };
         _page = 1;
 
         if (_filtered.Count == _allComics.Count)

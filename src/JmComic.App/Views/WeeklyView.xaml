@@ -21,7 +21,7 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                         VerticalAlignment="Center">
-                <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                          VerticalAlignment="Center" />
                 <Button Style="{StaticResource GhostButtonStyle}" Content="刷新"
                         Margin="14,0,0,0"
@@ -33,7 +33,7 @@
         <Border Grid.Row="1" Style="{StaticResource CardPanelStyle}" Padding="16"
                 Margin="0,0,0,14">
             <StackPanel Orientation="Horizontal">
-                <ComboBox x:Name="CategoryBox" Width="180" MinHeight="36"
+                <ComboBox x:Name="CategoryBox" Style="{StaticResource SortPillComboBoxStyle}" Width="180"
                           SelectionChanged="CategoryBox_SelectionChanged" />
                 <Border Background="{DynamicResource HoverBgBrush}" CornerRadius="10"
                         Padding="3" Margin="10,0,0,0" VerticalAlignment="Center">
@@ -75,7 +75,7 @@
 
             <Grid x:Name="ResultScroller" Visibility="Collapsed">
                 <controls:VirtualizedCardGrid x:Name="WeeklyItems"
-                                              SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                              SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                               CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
                     <controls:VirtualizedCardGrid.ItemTemplate>
                         <DataTemplate>
@@ -87,3 +87,4 @@
         </Grid>
     </Grid>
 </controls:CardGridViewBase>
+

@@ -1,82 +1,58 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
     <!-- ================================================================
-         浅色主题 · 霓虹粉紫（Neon Rose × Violet）
-         玫红主色 + 紫罗兰渐变，清爽但张扬
+         浅色主题 · 极简白 + 霓虹粉
+         干净高对比，卡片悬浮感，粉色仅作点睛
          ================================================================ -->
-
-    <!-- 背景 / 表面 -->
-    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F7F4FB" />
-    <SolidColorBrush x:Key="AppBackgroundTopBrush" Color="#FCFAFF" />
-    <SolidColorBrush x:Key="AppBackgroundBottomBrush" Color="#F2EDF9" />
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F5F5F7" />
+    <SolidColorBrush x:Key="AppBackgroundTopBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="AppBackgroundBottomBrush" Color="#F5F5F7" />
     <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="CardBorderBrush" Color="#E9E3F2" />
-    <SolidColorBrush x:Key="DividerBrush" Color="#EFEAF6" />
-    <SolidColorBrush x:Key="DividerStrongBrush" Color="#E0D8EC" />
-
-    <!-- 文字 -->
-    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#2B2333" />
-    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#6E647A" />
-    <SolidColorBrush x:Key="TextDisabledBrush" Color="#ACA2B6" />
-
-    <!-- 主色：霓虹玫红 -->
-    <SolidColorBrush x:Key="PrimaryBrush" Color="#E11D74" />
-    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#C90F64" />
-    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="#A90B55" />
+    <SolidColorBrush x:Key="CardBorderBrush" Color="#E8E8EC" />
+    <SolidColorBrush x:Key="DividerBrush" Color="#EAEAF0" />
+    <SolidColorBrush x:Key="DividerStrongBrush" Color="#DDDDE3" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#121214" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#6B7280" />
+    <SolidColorBrush x:Key="TextDisabledBrush" Color="#9AA0A8" />
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#E85D75" />
+    <SolidColorBrush x:Key="PrimaryHoverBrush" Color="#D94A64" />
+    <SolidColorBrush x:Key="PrimaryPressedBrush" Color="#C23A54" />
     <SolidColorBrush x:Key="PrimaryFgBrush" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#FF4D8D" />
-    <SolidColorBrush x:Key="PrimarySubtleBrush" Color="#FDECF4" />
-    <!-- 主按钮渐变（玫红 → 紫罗兰） -->
-    <SolidColorBrush x:Key="PrimaryGradientStartBrush" Color="#E11D74" />
-    <SolidColorBrush x:Key="PrimaryGradientEndBrush" Color="#9B5CF6" />
-
-    <!-- 状态色（柔和） -->
+    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#FF7A94" />
+    <SolidColorBrush x:Key="PrimarySubtleBrush" Color="#FEF0F3" />
+    <SolidColorBrush x:Key="PrimaryGradientStartBrush" Color="#E85D75" />
+    <SolidColorBrush x:Key="PrimaryGradientEndBrush" Color="#FF8A5B" />
     <SolidColorBrush x:Key="DangerBrush" Color="#E5484D" />
-    <SolidColorBrush x:Key="SuccessBrush" Color="#30A46C" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#2E9E6B" />
     <SolidColorBrush x:Key="WarningBrush" Color="#E8A33D" />
-
-    <!-- 输入框 -->
-    <SolidColorBrush x:Key="InputBorderBrush" Color="#DDD4E8" />
-    <SolidColorBrush x:Key="InputFocusBrush" Color="#E11D74" />
-    <SolidColorBrush x:Key="FocusGlowBrush" Color="#40E11D74" />
-
-    <!-- 交互层 -->
-    <SolidColorBrush x:Key="HoverBgBrush" Color="#0D2B2333" />
-    <SolidColorBrush x:Key="ActiveNavBgBrush" Color="#1FE11D74" />
-    <SolidColorBrush x:Key="SelectionBgBrush" Color="#33E11D74" />
-    <SolidColorBrush x:Key="ScrollbarThumbBrush" Color="#3D9B8FA8" />
-    <SolidColorBrush x:Key="ScrollbarThumbHoverBrush" Color="#6B9B8FA8" />
-    <SolidColorBrush x:Key="OverlayBrush" Color="#66000000" />
-    <SolidColorBrush x:Key="WindowControlHoverBrush" Color="#0D2B2333" />
-
-    <!-- 卡片 hover：上浮 + 霓虹光晕 -->
-    <SolidColorBrush x:Key="CardHoverBrush" Color="#FEFBFF" />
-    <SolidColorBrush x:Key="CardHoverBorderBrush" Color="#F2A5C8" />
-    <SolidColorBrush x:Key="CardShadowBrush" Color="#26000000" />
-
-    <SolidColorBrush x:Key="CardHoverShadowBrush" Color="#1FE11D74" />
-    <SolidColorBrush x:Key="SkeletonBrush" Color="#EFE9F6" />
-    <SolidColorBrush x:Key="SnackbarBgBrush" Color="#F02B2333" />
-    <SolidColorBrush x:Key="TextLinkBrush" Color="#C90F64" />
-
-    <!-- 阴影 / 光晕（Color 资源，供 DropShadowEffect 使用） -->
-    <Color x:Key="CardShadowColor">#26000000</Color>
-    <Color x:Key="PrimaryGlowColor">#59E11D74</Color>
-
-    <!-- 渐变用 Color 资源（GradientStop.Color 需要 Color 类型，不能用上面的 SolidColorBrush） -->
-    <Color x:Key="PrimaryGradientStartColor">#E11D74</Color>
-    <Color x:Key="PrimaryGradientEndColor">#9B5CF6</Color>
-    <Color x:Key="PrimaryHoverColor">#C90F64</Color>
-    <Color x:Key="PrimaryPressedColor">#A90B55</Color>
-    <Color x:Key="AppBackgroundTopColor">#FCFAFF</Color>
-    <Color x:Key="AppBackgroundBottomColor">#F2EDF9</Color>
-
-    <!-- 窗口外框：淡雅浅色渐变（低饱和，衬托内容不抢眼） -->
+    <SolidColorBrush x:Key="InputBorderBrush" Color="#E0E0E6" />
+    <SolidColorBrush x:Key="InputFocusBrush" Color="#E85D75" />
+    <SolidColorBrush x:Key="FocusGlowBrush" Color="#33E85D75" />
+    <SolidColorBrush x:Key="HoverBgBrush" Color="#0F121214" />
+    <SolidColorBrush x:Key="ActiveNavBgBrush" Color="#14E85D75" />
+    <SolidColorBrush x:Key="SelectionBgBrush" Color="#1AE85D75" />
+    <SolidColorBrush x:Key="ScrollbarThumbBrush" Color="#3D9AA0A8" />
+    <SolidColorBrush x:Key="ScrollbarThumbHoverBrush" Color="#5A9AA0A8" />
+    <SolidColorBrush x:Key="OverlayBrush" Color="#40000000" />
+    <SolidColorBrush x:Key="WindowControlHoverBrush" Color="#0F121214" />
+    <SolidColorBrush x:Key="CardHoverBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="CardHoverBorderBrush" Color="#EEC2CB" />
+    <SolidColorBrush x:Key="CardShadowBrush" Color="#1A000000" />
+    <SolidColorBrush x:Key="CardHoverShadowBrush" Color="#14E85D75" />
+    <SolidColorBrush x:Key="SkeletonBrush" Color="#EAEAF0" />
+    <SolidColorBrush x:Key="SnackbarBgBrush" Color="#F2FFFFFF" />
+    <SolidColorBrush x:Key="TextLinkBrush" Color="#D94A64" />
+    <Color x:Key="CardShadowColor">#1A000000</Color>
+    <Color x:Key="PrimaryGlowColor">#33E85D75</Color>
+    <Color x:Key="PrimaryGradientStartColor">#E85D75</Color>
+    <Color x:Key="PrimaryGradientEndColor">#FF8A5B</Color>
+    <Color x:Key="PrimaryHoverColor">#D94A64</Color>
+    <Color x:Key="PrimaryPressedColor">#C23A54</Color>
+    <Color x:Key="AppBackgroundTopColor">#FFFFFF</Color>
+    <Color x:Key="AppBackgroundBottomColor">#F5F5F7</Color>
     <LinearGradientBrush x:Key="WindowBorderBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="#C9C4DA" Offset="0" />
-        <GradientStop Color="#B9B2D8" Offset="0.5" />
-        <GradientStop Color="#D8C4D4" Offset="1" />
+        <GradientStop Color="#E8E0F0" Offset="0" />
+        <GradientStop Color="#E0D8EA" Offset="0.5" />
+        <GradientStop Color="#F0D8E0" Offset="1" />
     </LinearGradientBrush>
-
 </ResourceDictionary>

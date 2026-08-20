@@ -44,3 +44,4 @@ config.json
 .env
 .env.*
 secrets.*
+/preview

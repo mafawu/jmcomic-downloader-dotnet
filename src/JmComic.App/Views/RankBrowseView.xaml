@@ -26,7 +26,7 @@
         <!-- 结果态：卡片网格（虚拟化：只实例化可视行） -->
         <DataTemplate x:Key="ResultStateTemplate">
             <controls:VirtualizedCardGrid ItemsSource="{Binding Results, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                           CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <controls:VirtualizedCardGrid.ItemTemplate>
                     <DataTemplate>
@@ -101,7 +101,7 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal"
                             HorizontalAlignment="Right" VerticalAlignment="Center">
                     <StackPanel x:Name="PeriodTabs" Orientation="Horizontal" />
-                    <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                              Margin="14,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
             </Grid>
@@ -132,3 +132,5 @@
         </StackPanel>
     </Grid>
 </controls:CardGridViewBase>
+
+

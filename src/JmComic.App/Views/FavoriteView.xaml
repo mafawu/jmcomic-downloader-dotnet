@@ -43,7 +43,7 @@
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                             VerticalAlignment="Center">
-                    <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                              VerticalAlignment="Center" />
                     <Button Style="{StaticResource GhostButtonStyle}" Content="刷新"
                             Margin="14,0,0,0"
@@ -77,7 +77,7 @@
                 </StackPanel>
                 <Grid x:Name="FavoriteScroller" Visibility="Collapsed">
                     <controls:VirtualizedCardGrid x:Name="FavoriteItems"
-                                                  SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                  SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                   CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
                         <controls:VirtualizedCardGrid.ItemTemplate>
                             <DataTemplate>
@@ -113,3 +113,4 @@
         </StackPanel>
     </Grid>
 </controls:CardGridViewBase>
+

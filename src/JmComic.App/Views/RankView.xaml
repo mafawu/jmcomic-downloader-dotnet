@@ -59,7 +59,7 @@
         <!-- 结果态：卡片网格（虚拟化：只实例化可视行） -->
         <DataTemplate x:Key="ResultStateTemplate">
             <controls:VirtualizedCardGrid ItemsSource="{Binding Results, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                          SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                           CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=UserControl}}">
                 <controls:VirtualizedCardGrid.ItemTemplate>
                     <DataTemplate>
@@ -116,12 +116,12 @@
                     <RadioButton x:Name="PeriodMonth" GroupName="RankPeriod"
                                  Style="{StaticResource NavItemStyle}"
                                  Click="Period_Checked" Content="本月" />
-                    <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    <controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                              Margin="14,0,0,0" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <ComboBox x:Name="SortBox" Width="130"
+                    <ComboBox x:Name="SortBox" Style="{StaticResource SortPillComboBoxStyle}" Width="132"
                               SelectionChanged="SortBox_SelectionChanged">
                         <ComboBoxItem Content="最多观看" Tag="View" />
                         <ComboBoxItem Content="最新发布" Tag="Latest" />
@@ -161,3 +161,4 @@
         </StackPanel>
     </Grid>
 </controls:CardGridViewBase>
+

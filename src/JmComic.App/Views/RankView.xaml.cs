@@ -129,8 +129,8 @@ public partial class RankView : CardGridViewBase
         }
 
         _page = page;
-        _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
         SetBusy(true);
+        try { var dir = _config.Current.DownloadDir; _downloadedKeys = await Task.Run(() => _localLibrary.GetDownloadedKeys(dir)); } catch { _downloadedKeys = new HashSet<string>(); }
         try
         {
             var resp = await _client.CategoriesFilterAsync(page, _sort, _period);

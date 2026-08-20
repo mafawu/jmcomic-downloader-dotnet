@@ -152,7 +152,7 @@ public partial class WeeklyView : CardGridViewBase
             {
                 return; // 已有更新的请求，丢弃过期响应
             }
-            _downloadedKeys = _localLibrary.GetDownloadedKeys(_config.Current.DownloadDir);
+            try { var dir = _config.Current.DownloadDir; _downloadedKeys = await Task.Run(() => _localLibrary.GetDownloadedKeys(dir)); } catch { _downloadedKeys = new HashSet<string>(); }
 
             Items.Clear();
             foreach (var item in resp.List)

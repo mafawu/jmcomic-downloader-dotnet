@@ -4,72 +4,53 @@
              xmlns:common="clr-namespace:JmComic.App.Common"
              Margin="0,0,14,14"
              SizeChanged="Card_SizeChanged">
-    <Grid x:Name="Root" Style="{StaticResource CardLiftStyle}" Cursor="Hand"
-          MouseEnter="Root_MouseEnter"
-          MouseLeave="Root_MouseLeave"
-          MouseLeftButtonUp="Root_MouseLeftButtonUp">
-        <!-- 专用光晕/背景层：无内容，hover 阴影只光栅化这一层，内容层保持清晰 -->
-        <Border Style="{StaticResource CardHoverStyle}" CornerRadius="20" />
-        <!-- 内容层：不挂任何 Effect -->
-        <Border CornerRadius="20">
-            <StackPanel>
-            <!-- 封面高度由代码按 166:222 宽高比随宽度自适应，保证任意窗口/分格大小下不变形 -->
-            <Border x:Name="CoverHost" CornerRadius="20,20,0,0" ClipToBounds="True">
-                <Grid>
-                    <Border Background="{DynamicResource HoverBgBrush}" />
-                    <Image common:ImageLoader.Source="{Binding CoverUrl}"
-                           common:ImageLoader.Headers="{Binding ImageHeaders}"
-                           Stretch="UniformToFill" />
-                    <!-- 来源站点徽标（聚合搜索时显示） -->
-                    <Border Background="{DynamicResource OverlayBrush}" CornerRadius="7"
-                            Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Top"
-                            Margin="9,9,0,0">
-                        <Border.Style>
-                            <Style TargetType="Border">
+    <Grid x:Name="Root" Cursor="Hand" MouseEnter="Root_MouseEnter" MouseLeave="Root_MouseLeave" MouseLeftButtonUp="Root_MouseLeftButtonUp">
+        <Grid.ToolTip>
+            <ToolTip MaxWidth="360" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" Padding="10">
+                <StackPanel MaxWidth="340">
+                    <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="Bold" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding AuthorText}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
                                 <Setter Property="Visibility" Value="Visible" />
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SourceBadge}" Value="">
+                                    <DataTrigger Binding="{Binding AuthorText}" Value="">
                                         <Setter Property="Visibility" Value="Collapsed" />
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
-                        </Border.Style>
-                        <TextBlock Text="{Binding SourceBadge}" FontSize="10" Foreground="White" />
-                    </Border>
-                    <Border x:Name="Overlay" Background="{DynamicResource OverlayBrush}" Visibility="Collapsed">
-                        <Button Style="{StaticResource PrimaryButtonStyle}"
-                                Content="一键下载"
-                                HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Command="{Binding DownloadCommand}" />
-                    </Border>
-                    <Border Background="{DynamicResource SuccessBrush}" CornerRadius="999"
-                            Padding="8,3" HorizontalAlignment="Right" VerticalAlignment="Top"
-                            Margin="0,9,9,0">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <TextBlock Text="已下载" FontSize="10" Foreground="White" />
-                    </Border>
-                </Grid>
-            </Border>
-            <StackPanel Margin="13,11,13,13" MinHeight="64">
-                <TextBlock Text="{Binding Name}"
-                           FontSize="13" FontWeight="SemiBold"
-                           TextWrapping="Wrap" common:TextBlockExt.MaxLines="2" />
-                <TextBlock Text="{Binding AuthorText}"
-                           FontSize="11"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
-                           Margin="0,6,0,0"
-                           TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </ToolTip>
+        </Grid.ToolTip>
+        <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1" CornerRadius="14" MaxHeight="380">
+            <StackPanel>
+                <Border x:Name="CoverHost" CornerRadius="14,14,0,0" ClipToBounds="True" Background="{DynamicResource SkeletonBrush}">
+                    <Grid>
+                        <Image common:ImageLoader.Source="{Binding CoverUrl}" common:ImageLoader.Headers="{Binding ImageHeaders}" Stretch="UniformToFill" />
+                        <Border VerticalAlignment="Bottom" Height="40" Opacity="0.85">
+                            <Border.Background>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#66000000" Offset="1"/></LinearGradientBrush>
+                            </Border.Background>
+                        </Border>
+                        <Border Background="#66000000" CornerRadius="7" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8,8,0,0">
+                            <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding SourceBadge}" Value=""><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></Border.Style>
+                            <TextBlock Text="{Binding SourceBadge}" FontSize="10" Foreground="White" FontWeight="Bold"/>
+                        </Border>
+                        <Border x:Name="Overlay" Background="#66000000" Visibility="Collapsed" CornerRadius="14,14,0,0">
+                            <Button Style="{StaticResource PrimaryButtonStyle}" Content="查看详情" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <Border Background="{DynamicResource SuccessBrush}" CornerRadius="999" Padding="7,2" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,8,8,0">
+                            <Border.Style><Style TargetType="Border"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding IsDownloaded}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></Border.Style>
+                            <TextBlock Text="✓ 已下载" FontSize="10" Foreground="White" FontWeight="Bold"/>
+                        </Border>
+                    </Grid>
+                </Border>
+                <StackPanel Margin="10,10,10,12" Height="48" MaxHeight="48">
+                    <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" common:TextBlockExt.MaxLines="2" LineHeight="16" TextTrimming="CharacterEllipsis" MaxHeight="32" />
+                    <TextBlock Text="{Binding AuthorText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" MaxHeight="16" />
+                </StackPanel>
             </StackPanel>
         </Border>
     </Grid>

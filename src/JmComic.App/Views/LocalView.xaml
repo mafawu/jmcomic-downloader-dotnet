@@ -21,7 +21,7 @@
                 </Border>
             </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                <controls:CardSizeSlider CellScale="{Binding CellScale, RelativeSource={RelativeSource AncestorType=views:LocalView}}"
+                <TextBlock Text="排序" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0" /><ComboBox x:Name="SortBox" Style="{StaticResource SortPillComboBoxStyle}" Width="140" VerticalAlignment="Center" SelectedIndex="0" SelectionChanged="SortBox_SelectionChanged"><ComboBoxItem Content="最近更新" Tag="ModifiedDesc" /><ComboBoxItem Content="名称 A → Z" Tag="NameAsc" /><ComboBoxItem Content="名称 Z → A" Tag="NameDesc" /><ComboBoxItem Content="章节数 ↓" Tag="ChapterDesc" /><ComboBoxItem Content="图片数 ↓" Tag="ImageDesc" /><ComboBoxItem Content="最早更新" Tag="ModifiedAsc" /></ComboBox><controls:CardSizeSlider Columns="{Binding Columns, RelativeSource={RelativeSource AncestorType=views:LocalView}}"
                                          VerticalAlignment="Center" />
                 <Button Style="{StaticResource GhostButtonStyle}" Content="刷新" Margin="14,0,0,0"
                         Click="RefreshButton_Click" />
@@ -79,18 +79,9 @@
                         Click="RefreshButton_Click" />
             </StackPanel>
 
-            <Grid x:Name="ResultScroller" Visibility="Collapsed">
-                <controls:VirtualizedCardGrid x:Name="LocalItems"
-                                              SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}"
-                                              CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}">
-                    <controls:VirtualizedCardGrid.ItemTemplate>
-                        <DataTemplate>
-                            <controls:LocalComicCard HorizontalAlignment="Center"
-                                Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" />
-                        </DataTemplate>
-                    </controls:VirtualizedCardGrid.ItemTemplate>
-                </controls:VirtualizedCardGrid>
-            </Grid>
+            <ScrollViewer x:Name="ResultScroller" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                <controls:VirtualizedCardGrid x:Name="LocalItems" SlotWidth="{Binding SlotWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}" DesiredColumns="{Binding Columns, RelativeSource={RelativeSource AncestorType=views:LocalView}}" CardWidth="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=views:LocalView}}"><controls:VirtualizedCardGrid.ItemTemplate><DataTemplate><controls:LocalComicCard HorizontalAlignment="Center" Width="{Binding CardWidth, RelativeSource={RelativeSource AncestorType=controls:VirtualizedCardGrid}}" /></DataTemplate></controls:VirtualizedCardGrid.ItemTemplate></controls:VirtualizedCardGrid>
+            </ScrollViewer>
         </Grid>
 
         <!-- 分页 -->
@@ -110,3 +101,7 @@
         </Grid>
     </Grid>
 </controls:CardGridViewBase>
+
+
+
+
