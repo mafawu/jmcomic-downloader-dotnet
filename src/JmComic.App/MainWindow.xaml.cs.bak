@@ -100,15 +100,6 @@ public partial class MainWindow : Window
                 PageHost.Content = _novelView ?? new NovelLocalView();
                 RightPanelHost.Content = _novelSearchPanel ?? new NovelSearchPanel();
                 RightPanelHost.Visibility = Visibility.Visible;
-                LeftNavHost.Visibility = Visibility.Collapsed;
-                _panelVisible = true;
-                UpdatePanelVisibility();
-                try { (_novelView as JmComic.App.Views.NovelLocalView)?.RefreshHistory(); } catch { }
-                return;
-            }
-            if (PageHost.Content is NovelLocalView)
-            {
-                ExitNovelMode();
                 return;
             }
             if (PageHost.Content is OnlineReaderView)
@@ -197,7 +188,6 @@ public partial class MainWindow : Window
         {
             return;
         }
-        LeftNavHost.Visibility = Visibility.Visible;
         HideRightPanel();
         if (ReferenceEquals(sender, NavSearch))
         {
@@ -473,43 +463,22 @@ public partial class MainWindow : Window
         return await _localView.OpenManageDirsDialogAsync(owner);
     }
 
-    /// <summary>进入小说独立页：隐藏左侧栏，右侧为小说筛选。</summary>
-private void OpenNovelLocal()
+    /// <summary>显示本地漫画列表，并在右侧展示本地搜索工具。</summary>
+    private void OpenNovelLocal()
     {
-        try
-        {
-            _novelView ??= new NovelLocalView();
-            if (_novelSearchPanel == null) _novelSearchPanel = new NovelSearchPanel();
-            _novelView.SetSearchPanel(_novelSearchPanel);
-            _lastPage = _novelView;
-            PageHost.Content = _novelView;
-            RightPanelHost.Content = _novelSearchPanel;
-            RightPanelHost.Visibility = Visibility.Visible;
-            LeftNavHost.Visibility = Visibility.Collapsed;
-            _panelVisible = true;
-            UpdatePanelVisibility();
-        }
-        catch (Exception ex)
-        {
-            try { System.IO.File.AppendAllText(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), "jm_crash.log"), "[" + DateTime.Now + "] OpenNovelLocal " + ex + "\r\n"); } catch { }
-            System.Windows.MessageBox.Show("打开小说页失败：" + ex.Message + "\r\n\r\n" + ex.StackTrace, "错误");
-        }
-    }
-
-    private void ExitNovelMode()
-    {
-        LeftNavHost.Visibility = Visibility.Visible;
-        HideRightPanel();
-        PageHost.Content = _searchView;
-        _lastPage = _searchView;
-        NavSearch.IsChecked = true;
+        _novelView ??= new NovelLocalView();
+        if (_novelSearchPanel == null) _novelSearchPanel = new NovelSearchPanel();
+        _novelView.SetSearchPanel(_novelSearchPanel);
+        _lastPage = _novelView;
+        PageHost.Content = _novelView;
+        RightPanelHost.Content = _novelSearchPanel;
+        RightPanelHost.Visibility = Visibility.Visible;
+        _panelVisible = true;
+        UpdatePanelVisibility();
     }
 
     private void OpenNovelReader(string path)
     {
-        LeftNavHost.Visibility = Visibility.Collapsed;
-        _panelVisible = false;
-        UpdatePanelVisibility();
         _novelReaderView ??= new NovelReaderView();
         _novelReaderView.LoadFile(path);
         _lastPage = PageHost.Content as UserControl;
@@ -521,7 +490,6 @@ private void OpenNovelLocal()
 
     private void ShowLocalList()
     {
-        LeftNavHost.Visibility = Visibility.Visible;
         _localView ??= new LocalView();
         _localTabContent = _localView;
         PageHost.Content = _localView;

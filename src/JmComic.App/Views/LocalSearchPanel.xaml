@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Background="{DynamicResource SurfaceBrush}">
     <UserControl.Resources>
-        <!-- 标签筛选 ToggleButton 样式 -->
+        <!-- 筛选：排除态（仿 Green FilterSidebar ∅） -->
         <Style x:Key="LocalTagToggleStyle" TargetType="ToggleButton">
             <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="Cursor" Value="Hand" />
@@ -19,6 +19,13 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource ActiveNavBgBrush}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="excluded">
+                                <Setter TargetName="Bd" Property="Background" Value="#1AE5484D" />
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#33E5484D" />
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="1" />
+                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource PrimaryBrush}" />
@@ -70,18 +77,41 @@
             </Grid>
         </Border>
 
-        <!-- 标签列表 -->
-        <Grid Grid.Row="2">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                          Padding="14,0,14,14">
+        <!-- 筛选区：标签 + 作者（仿 Green FilterSidebar） -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                      Padding="14,0,14,14">
+            <StackPanel>
+                <!-- 标签筛选 -->
+                <Grid Margin="0,0,0,6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="标签筛选" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="TagCountText" FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button x:Name="ClearTagFilterButton" Style="{StaticResource GhostButtonStyle}" Content="清除" FontSize="10.5" Padding="6,2"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Collapsed" Click="ClearTagFilter_Click" />
+                </Grid>
+                <TextBlock x:Name="TagEmptyText" Text="暂无标签" FontSize="11" Foreground="{DynamicResource TextDisabledBrush}" Margin="0,2,0,8" Visibility="Collapsed" />
                 <ItemsControl x:Name="TagItems">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                 </ItemsControl>
-            </ScrollViewer>
-        </Grid>
+                <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,10,0,10" />
+                <!-- 作者筛选 -->
+                <Grid Margin="0,0,0,6">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="作者筛选" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="AuthorCountText" FontSize="10.5" Foreground="{DynamicResource TextDisabledBrush}" Margin="6,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button x:Name="ClearAuthorFilterButton" Style="{StaticResource GhostButtonStyle}" Content="清除" FontSize="10.5" Padding="6,2"
+                            HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="Collapsed" Click="ClearAuthorFilter_Click" />
+                </Grid>
+                <TextBlock x:Name="AuthorEmptyText" Text="暂无作者" FontSize="11" Foreground="{DynamicResource TextDisabledBrush}" Margin="0,2,0,8" Visibility="Collapsed" />
+                <ItemsControl x:Name="AuthorItems">
+                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                </ItemsControl>
+                <TextBlock Text="左键包含 · 右键排除" FontSize="10" Foreground="{DynamicResource TextDisabledBrush}" Margin="0,12,0,0" HorizontalAlignment="Center" Opacity="0.7" />
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </UserControl>
+
+

@@ -61,6 +61,17 @@
                             Click="DownloadUpdateButton_Click" />
                 </StackPanel>
 
+                <!-- 统计区（仿 Green DetailPanel） -->
+                <Border Background="{DynamicResource HoverBgBrush}" CornerRadius="10" Padding="12,10" Margin="0,14,0,0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center"><TextBlock x:Name="StatChapterText" Text="--" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="章节" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/></StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center"><TextBlock x:Name="StatImageText" Text="--" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="图片" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/></StackPanel>
+                    </Grid>
+                </Border>
+                <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Content="阅读" Padding="14,6" x:Name="ReadButton"/>
+                    <Button Style="{StaticResource GhostButtonStyle}" Content="打开目录" Margin="8,0,0,0" Padding="14,6" x:Name="OpenFolderButton"/>
+                </StackPanel>
                 <TextBlock x:Name="PathText" FontSize="10.5" FontFamily="Consolas"
                            Foreground="{DynamicResource TextDisabledBrush}"
                            TextWrapping="Wrap" Margin="0,16,0,0" />
@@ -68,3 +79,4 @@
         </ScrollViewer>
     </Grid>
 </UserControl>
+

@@ -69,7 +69,16 @@
                     </Grid>
                     <TextBlock Text="JM 下载器" FontSize="14" FontWeight="Bold"
                                Margin="10,0,0,0" VerticalAlignment="Center" />
-                    <ComboBox x:Name="SourceBox" Width="132" Margin="16,0,0,0"
+                    <Border Style="{StaticResource KindPillGroupStyle}" Margin="16,0,0,0" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="KindMangaPill" Content="漫画" IsChecked="True" Style="{StaticResource KindPillRadioStyle}" Tag="Manga" GroupName="KindGroup" Click="KindPill_Click"/>
+                            <RadioButton x:Name="KindVideoPill" Content="视频" Style="{StaticResource KindPillRadioStyle}" Tag="Video" GroupName="KindGroup" Click="KindPill_Click"/>
+                    <Button x:Name="NovelLocalButton" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Padding="10,6" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True" Click="NovelLocalButton_Click" ToolTip="打开本地小说库（独立页面）">
+                        <StackPanel Orientation="Horizontal"><Border Background="#7C6CF6" CornerRadius="6" Padding="6,2" VerticalAlignment="Center"><TextBlock Text="小" FontSize="10" Foreground="White" FontWeight="Bold"/></Border><TextBlock Text="本地小说" Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/></StackPanel>
+                    </Button>
+                        </StackPanel>
+                    </Border>
+                    <ComboBox x:Name="SourceBox" Width="132" Margin="8,0,0,0"
                               VerticalAlignment="Center" FontSize="12"
                               shell:WindowChrome.IsHitTestVisibleInChrome="True"
                               SelectionChanged="SourceBox_SelectionChanged" />
@@ -154,7 +163,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- 左侧霓虹导航栏：阴影/背景只挂在专用层上，内容层不挂 Effect 保持文字清晰 -->
-            <Grid Grid.Column="0" Width="196" Margin="14,14,0,14">
+            <Grid x:Name="LeftNavHost" Grid.Column="0" Width="196" Margin="14,14,0,14">
                 <Border Background="{DynamicResource SurfaceBrush}"
                         BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"
                         CornerRadius="18"
@@ -277,5 +286,7 @@
         </Border>
     </Border>
 </Window>
+
+
 
 

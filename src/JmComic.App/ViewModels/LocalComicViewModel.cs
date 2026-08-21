@@ -1,10 +1,12 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using JmComic.Core.Models;
 
 namespace JmComic.App.ViewModels;
 
-/// <summary>本地漫画卡片（封面 + 名字 + 标签 + 章节数）。</summary>
-public class LocalComicViewModel
+/// <summary>本地漫画卡片（仿 Green MediaCard：进度/多选/收藏/状态角标）</summary>
+public class LocalComicViewModel : INotifyPropertyChanged
 {
     public string Name { get; init; } = "";
     public string NameCn { get; init; } = "";
@@ -14,20 +16,26 @@ public class LocalComicViewModel
     public int ChapterCount { get; init; }
     public long ImageCount { get; init; }
     public bool HasMetadata { get; init; }
-
-    /// <summary>卡片上展示的标签（最多 3 个）。</summary>
     public List<string> DisplayTags { get; init; } = new();
-
-    /// <summary>中文名与原名不同且非空时，在卡片上展示中文名。</summary>
     public bool ShowNameCn => !string.IsNullOrEmpty(NameCn) && NameCn != Name;
-
-    /// <summary>章节/图片统计文本。</summary>
     public string StatsText { get; init; } = "";
-
     public ICommand? OpenFolderCommand { get; set; }
     public ICommand? OpenReaderCommand { get; set; }
-
-    /// <summary>对应的本地漫画数据（供详情面板/更新检查使用）。</summary>
     public LocalComic Source { get; init; } = null!;
+
+    private bool _isSelected;
+    public bool IsSelected { get => _isSelected; set { if (_isSelected != value) { _isSelected = value; OnPropertyChanged(); OnPropertyChanged(nameof(SelectionVisibility)); } } }
+    public bool IsSelectionMode { get; set; }
+    public System.Windows.Visibility SelectionVisibility => IsSelectionMode ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
+
+    public bool IsFavorite => Source?.HasMetadata == true && Tags.Count > 5;
+    public bool ShowFileError => !HasMetadata;
+    public bool ShowArchiveIcon => false;
+
+    public double Progress => ChapterCount > 0 ? Math.Clamp((ImageCount > 0 ? 100.0 * Math.Min(1.0, ChapterCount / 50.0) : 0), 0, 100) : 0;
+    public string ProgressText => ImageCount > 0 ? $"{ImageCount}P" : $"{ChapterCount}章";
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? n=null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
 }
 

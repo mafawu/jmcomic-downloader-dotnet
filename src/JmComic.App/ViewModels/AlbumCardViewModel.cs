@@ -14,6 +14,7 @@ public class AlbumCardViewModel : ObservableObject
     /// <summary>加载封面需要的请求头（防盗链 Referer 等）。</summary>
     public IReadOnlyDictionary<string, string>? ImageHeaders { get; init; }
 
+    public string Kind { get; init; } = "Manga";
     public string Name { get; init; } = "";
     public string AuthorText { get; init; } = "";
     public string CoverUrl { get; init; } = "";

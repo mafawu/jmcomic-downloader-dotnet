@@ -1,3 +1,4 @@
+using System.Text;
 using System.Windows;
 using JmComic.App.Services;
 using JmComic.App.Themes;
@@ -48,11 +49,14 @@ public partial class App : Application
     /// </summary>
     protected void RunStartup(StartupEventArgs e)
     {
+        AppDomain.CurrentDomain.UnhandledException += (s, e) => { try { var ex = e.ExceptionObject as Exception; System.IO.File.AppendAllText(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), "jm_crash.log"), "[" + DateTime.Now + "] AppDomain " + ex + "\r\n"); } catch { } };
+        DispatcherUnhandledException += (s, e) => { try { System.IO.File.AppendAllText(System.IO.Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop), "jm_crash.log"), "[" + DateTime.Now + "] Dispatcher " + e.Exception + "\r\n"); } catch { } e.Handled = true; System.Windows.MessageBox.Show("发生未处理异常：" + e.Exception.Message + "\r\n\r\n已记录到桌面 jm_crash.log", "崩溃", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error); };
         AppPaths.DataDirName = DataDirName;
 
         // 把旧版 %APPDATA% 数据迁移到程序同目录数据文件夹
         AppPaths.MigrateLegacyData();
 
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         ThemeManager.Initialize();
 
         var services = new ServiceCollection();
@@ -72,6 +76,9 @@ public partial class App : Application
             services.AddSingleton<SessionService>();
         }
         services.AddSingleton<LocalLibraryService>();
+        services.AddSingleton<NovelIndexService>();
+        services.AddSingleton<NovelReadingHistoryService>();
+        services.AddSingleton<NovelReaderSettingsService>();
         services.AddSingleton<AlbumUpdateService>();
         services.AddSingleton<DownloadPanelViewModel>();
         Services = services.BuildServiceProvider();
@@ -128,5 +135,6 @@ public partial class App : Application
         }
     }
 }
+
 
 

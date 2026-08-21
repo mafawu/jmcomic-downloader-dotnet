@@ -44,27 +44,27 @@
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
                                                 <Grid>
-                                                    <Ellipse x:Name="Outer" Width="14" Height="14"
-                                                             Fill="{DynamicResource SurfaceBrush}"
-                                                             Stroke="{DynamicResource CardBorderBrush}" StrokeThickness="1.2">
-                                                        <Ellipse.Effect>
+                                                    <Border x:Name="Outer" Width="14" Height="14" CornerRadius="7"
+                                                            Background="{DynamicResource SurfaceBrush}"
+                                                            BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1.2">
+                                                        <Border.Effect>
                                                             <DropShadowEffect BlurRadius="6" ShadowDepth="1" Direction="270"
                                                                               Opacity="0.22" Color="{DynamicResource CardShadowColor}"/>
-                                                        </Ellipse.Effect>
-                                                    </Ellipse>
-                                                    <Ellipse x:Name="Dot" Width="7" Height="7"
-                                                             HorizontalAlignment="Center" VerticalAlignment="Center">
-                                                        <Ellipse.Fill>
+                                                        </Border.Effect>
+                                                    </Border>
+                                                    <Border x:Name="Dot" Width="7" Height="7" CornerRadius="3.5"
+                                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Border.Background>
                                                             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                                                                 <GradientStop Color="{DynamicResource PrimaryGradientStartColor}" Offset="0"/>
                                                                 <GradientStop Color="{DynamicResource PrimaryGradientEndColor}" Offset="1"/>
                                                             </LinearGradientBrush>
-                                                        </Ellipse.Fill>
-                                                    </Ellipse>
+                                                        </Border.Background>
+                                                    </Border>
                                                 </Grid>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="Outer" Property="Stroke" Value="{DynamicResource PrimaryBrush}"/>
+                                                        <Setter TargetName="Outer" Property="BorderBrush" Value="{DynamicResource PrimaryBrush}"/>
                                                         <Setter TargetName="Outer" Property="Effect">
                                                             <Setter.Value>
                                                                 <DropShadowEffect BlurRadius="10" ShadowDepth="0" Opacity="0.38" Color="{DynamicResource PrimaryGlowColor}"/>
@@ -164,3 +164,4 @@
         </Grid>
     </Border>
 </UserControl>
+

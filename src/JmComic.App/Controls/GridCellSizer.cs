@@ -27,10 +27,17 @@ public static class GridCellSizer
         if (availableWidth <= 0)
             return (BaseCardWidth, BaseCardWidth + Spacing);
         columns = Math.Clamp(columns, MinColumns, MaxColumns);
-        var slotWidth = availableWidth / columns;
+        // 向下取整避免亚像素累计溢出导致 WrapPanel 少一列，右侧大空白
+        var slotWidth = Math.Floor(availableWidth / columns);
         var cardWidth = slotWidth - Spacing;
         cardWidth = Math.Clamp(cardWidth, 80, 320);
-        slotWidth = cardWidth + Spacing;
+        if (cardWidth + Spacing > slotWidth) slotWidth = cardWidth + Spacing;
+        else slotWidth = Math.Floor(availableWidth / columns);
+        // 二次校正：确保 N*slot <= available
+        while (slotWidth * columns > availableWidth && slotWidth > 80)
+            slotWidth--;
+        cardWidth = slotWidth - Spacing;
+        if (cardWidth < 80) { cardWidth = 80; slotWidth = cardWidth + Spacing; }
         return (cardWidth, slotWidth);
     }
 }

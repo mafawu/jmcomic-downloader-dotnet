@@ -29,8 +29,7 @@
                     <Image x:Name="CoverImage" Stretch="Uniform" Margin="8" />
                 </Border>
 
-                <TextBlock x:Name="TitleText" FontSize="16" FontWeight="Bold"
-                           TextWrapping="Wrap" Margin="0,12,0,0" />
+                <DockPanel Margin="0,12,0,0" LastChildFill="True"><Border x:Name="KindBadgeDetail" Background="{DynamicResource PrimaryBrush}" CornerRadius="6" Padding="6,2" Margin="8,0,0,0" DockPanel.Dock="Right" VerticalAlignment="Center"><TextBlock Text="漫" FontSize="10" Foreground="White" FontWeight="Bold"/></Border><TextBlock x:Name="TitleText" FontSize="16" FontWeight="Bold" TextWrapping="Wrap" /></DockPanel>
                 <TextBlock x:Name="TitleCnText" FontSize="12"
                            Foreground="{DynamicResource TextSecondaryBrush}"
                            TextWrapping="Wrap" Margin="0,4,0,0" Visibility="Collapsed" />
@@ -72,6 +71,8 @@
                            TextWrapping="Wrap" Margin="0,6,0,0" Visibility="Collapsed" />
 
                 <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,14,0,0" />
+                <!-- 统计区（仿 Green DetailPanel stats） -->
+                <Border Background="{DynamicResource HoverBgBrush}" CornerRadius="10" Padding="12,10" Margin="0,14,0,0" BorderBrush="{DynamicResource CardBorderBrush}" BorderThickness="1"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions><StackPanel Grid.Column="0" HorizontalAlignment="Center"><TextBlock x:Name="StatChapterText" Text="--" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="章节" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/></StackPanel><StackPanel Grid.Column="1" HorizontalAlignment="Center"><TextBlock x:Name="StatViewText" Text="--" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="浏览" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/></StackPanel><StackPanel Grid.Column="2" HorizontalAlignment="Center"><TextBlock x:Name="StatLikeText" Text="--" FontSize="14" FontWeight="Bold" HorizontalAlignment="Center"/><TextBlock Text="收藏" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Margin="0,2,0,0"/></StackPanel></Grid></Border>
                 <TextBlock x:Name="PathText" FontSize="10.5" FontFamily="Consolas"
                            Foreground="{DynamicResource TextDisabledBrush}"
                            TextWrapping="Wrap" Margin="0,12,0,0" />

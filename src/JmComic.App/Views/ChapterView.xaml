@@ -18,7 +18,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>
+                    <Border x:Name="StatusDot" Width="8" Height="8" CornerRadius="4" Background="{DynamicResource TextDisabledBrush}" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="9,0,6,0" TextTrimming="CharacterEllipsis"/>
                     <Border Grid.Column="2" x:Name="SelectedCheck" Width="16" Height="16" CornerRadius="8"
                             Background="{DynamicResource PrimaryBrush}" Visibility="Collapsed" VerticalAlignment="Center">
@@ -32,11 +32,11 @@
             </Border>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsDownloaded}" Value="True">
-                    <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                    <Setter TargetName="StatusDot" Property="Background" Value="{DynamicResource SuccessBrush}" />
                     <Setter TargetName="ReadBtn" Property="Visibility" Value="Collapsed" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsDownloading}" Value="True">
-                    <Setter TargetName="StatusDot" Property="Fill" Value="{DynamicResource PrimaryBrush}" />
+                    <Setter TargetName="StatusDot" Property="Background" Value="{DynamicResource PrimaryBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
                     <Setter TargetName="Card" Property="Background" Value="{DynamicResource PrimarySubtleBrush}" />
@@ -156,3 +156,5 @@
         </Border>
     </Grid>
 </UserControl>
+
+

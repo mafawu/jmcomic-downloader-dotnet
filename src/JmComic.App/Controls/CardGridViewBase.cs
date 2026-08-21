@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 
 namespace JmComic.App.Controls;
@@ -59,7 +59,7 @@ public class CardGridViewBase : UserControl
         Loaded += (_, _) => UpdateCellSize();
     }
 
-    protected void UpdateCellSize()
+    protected virtual void UpdateCellSize()
     {
         if (ActualWidth <= 0)
             return;

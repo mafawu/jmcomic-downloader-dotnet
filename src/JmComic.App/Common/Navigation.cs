@@ -13,6 +13,7 @@ public static class Navigation
     public static Action? BackHandler { get; set; }
     public static Action<RankPeriod>? OpenRankHandler { get; set; }
     public static Action<IComicSource, IReadOnlyList<Chapter>, int>? OpenOnlineReaderHandler { get; set; }
+    public static Action<string>? OpenNovelReaderHandler { get; set; }
 
     /// <summary>打开指定源的漫画详情。</summary>
     public static void OpenComic(string sourceId, string comicId) => OpenComicHandler?.Invoke(sourceId, comicId);
@@ -31,6 +32,8 @@ public static class Navigation
     public static void OpenRank(RankPeriod period) => OpenRankHandler?.Invoke(period);
 
     /// <summary>打开在线阅读器：从指定章节开始浏览整本。</summary>
+    public static void OpenNovelReader(string path) => OpenNovelReaderHandler?.Invoke(path);
+
     public static void OpenOnlineReader(IComicSource source, IReadOnlyList<Chapter> chapters, int startIndex)
         => OpenOnlineReaderHandler?.Invoke(source, chapters, startIndex);
 }

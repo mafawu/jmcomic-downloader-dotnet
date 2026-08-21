@@ -1,8 +1,13 @@
 namespace JmComic.Core.Sources;
 
+public enum ResourceKind { Manga, Novel, Video }
+
 /// <summary>内容源元信息：UI 的站点切换、能力展示等均依赖此信息。</summary>
 public class ComicSourceInfo
 {
+    /// <summary>资源种类（漫画/小说/视频），顶栏 Kind Pills 驱动</summary>
+    public ResourceKind Kind { get; init; } = ResourceKind.Manga;
+
     /// <summary>源唯一标识，如 "jm"、"wnacg"。</summary>
     public string Id { get; init; } = "";
 
@@ -39,4 +44,3 @@ public class ComicSourceInfo
     /// <summary>并发获取章节图片 URL 的最大数量（默认 10）。</summary>
     public int MaxUrlFetchConcurrency { get; init; } = 10;
 }
-

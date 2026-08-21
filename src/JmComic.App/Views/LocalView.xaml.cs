@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -41,6 +41,9 @@ public partial class LocalView : CardGridViewBase
     private string _keyword = "";
     private string _sortTag = "ModifiedDesc";
     private HashSet<string> _selectedTags = new(StringComparer.OrdinalIgnoreCase);
+    private HashSet<string> _excludedTags = new(StringComparer.OrdinalIgnoreCase);
+    private HashSet<string> _includedAuthors = new(StringComparer.OrdinalIgnoreCase);
+    private HashSet<string> _excludedAuthors = new(StringComparer.OrdinalIgnoreCase);
     private LocalSearchPanel? _searchPanel;
     private readonly HashSet<string> _translationAttempted = new(StringComparer.OrdinalIgnoreCase);
 
@@ -94,7 +97,7 @@ public partial class LocalView : CardGridViewBase
                 LocalItems.ItemsSource = null;
                 ShowState(State.NoDirs);
                 _hasLoaded = true;
-                _searchPanel?.SetTags(new List<string>());
+                _searchPanel?.SetFilters(new Dictionary<string,int>(), new Dictionary<string,int>());
                 return;
             }
 
@@ -120,12 +123,12 @@ public partial class LocalView : CardGridViewBase
                 EmptyTitleText.Text = "所选目录下还没有已下载的漫画";
                 EmptySubtitleText.Text = "点击「刷新」按钮扫描本地目录";
                 ShowState(State.Empty);
-                _searchPanel?.SetTags(new List<string>());
+                _searchPanel?.SetFilters(new Dictionary<string,int>(), new Dictionary<string,int>());
                 return;
             }
 
             RebuildFilter();
-            _searchPanel?.SetTags(BuildTagList());
+            _searchPanel?.SetFilters(BuildTagCounts(), BuildAuthorCounts());
         }
         catch (Exception ex)
         {
@@ -293,7 +296,7 @@ public partial class LocalView : CardGridViewBase
                 LocalItems.ItemsSource = null;
                 ShowState(State.NoDirs);
                 _hasLoaded = true;
-                _searchPanel?.SetTags(new List<string>());
+                _searchPanel?.SetFilters(new Dictionary<string,int>(), new Dictionary<string,int>());
                 return;
             }
 
@@ -324,7 +327,7 @@ public partial class LocalView : CardGridViewBase
             _allComics = comics;
             _hasLoaded = true;
             RebuildFilter();
-            _searchPanel?.SetTags(BuildTagList());
+            _searchPanel?.SetFilters(BuildTagCounts(), BuildAuthorCounts());
             _ = TranslateMissingNamesAsync();
         }
         catch (Exception ex)
@@ -428,10 +431,13 @@ public partial class LocalView : CardGridViewBase
     /// <summary>绑定右侧本地搜索工具；已加载时推送标签列表。</summary>
     public void SetSearchPanel(LocalSearchPanel panel)
     {
+        if (_searchPanel != null) { _searchPanel.SearchChanged -= ApplySearch; _searchPanel.FilterChanged -= ApplyFilter; }
         _searchPanel = panel;
+        _searchPanel.SearchChanged += ApplySearch;
+        _searchPanel.FilterChanged += ApplyFilter;
         if (_hasLoaded)
         {
-            _searchPanel.SetTags(BuildTagList());
+            _searchPanel.SetFilters(BuildTagCounts(), BuildAuthorCounts());
         }
     }
 
@@ -468,10 +474,14 @@ public partial class LocalView : CardGridViewBase
     }
 
     /// <summary>应用本地搜索条件（关键字 + 标签），实时过滤列表。</summary>
-    public void ApplySearch(string keyword, IReadOnlyCollection<string> tags)
+    public void ApplySearch(string keyword, IReadOnlyCollection<string> tags) => ApplyFilter(new LocalSearchPanel.LocalFilterState(keyword, tags, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>()));
+    public void ApplyFilter(LocalSearchPanel.LocalFilterState state)
     {
-        _keyword = keyword;
-        _selectedTags = new HashSet<string>(tags, StringComparer.OrdinalIgnoreCase);
+        _keyword = state.Keyword;
+        _selectedTags = new HashSet<string>(state.IncludedTags, StringComparer.OrdinalIgnoreCase);
+        _excludedTags = new HashSet<string>(state.ExcludedTags, StringComparer.OrdinalIgnoreCase);
+        _includedAuthors = new HashSet<string>(state.IncludedAuthors, StringComparer.OrdinalIgnoreCase);
+        _excludedAuthors = new HashSet<string>(state.ExcludedAuthors, StringComparer.OrdinalIgnoreCase);
         if (_hasLoaded)
         {
             RebuildFilter();
@@ -502,7 +512,7 @@ public partial class LocalView : CardGridViewBase
             LocalCount.Text = $"匹配 {_filtered.Count} / {_allComics.Count} 部";
         }
 
-        var filtering = _selectedTags.Count > 0 || !string.IsNullOrWhiteSpace(_keyword);
+        var filtering = _selectedTags.Count > 0 || _excludedTags.Count > 0 || _includedAuthors.Count > 0 || _excludedAuthors.Count > 0 || !string.IsNullOrWhiteSpace(_keyword);
         EmptyTitleText.Text = filtering ? "没有匹配的漫画" : "所选目录下还没有已下载的漫画";
         EmptySubtitleText.Text = filtering ? "换个关键字或标签试试" : "去搜索页下载漫画后即可在这里看到";
 
@@ -525,6 +535,18 @@ public partial class LocalView : CardGridViewBase
         {
             return false;
         }
+        if (_excludedTags.Count > 0 && comic.Tags.Any(t => _excludedTags.Contains(t)))
+        {
+            return false;
+        }
+        if (_includedAuthors.Count > 0 && !comic.Author.Any(a => _includedAuthors.Contains(a)))
+        {
+            return false;
+        }
+        if (_excludedAuthors.Count > 0 && comic.Author.Any(a => _excludedAuthors.Contains(a)))
+        {
+            return false;
+        }
         if (string.IsNullOrWhiteSpace(_keyword))
         {
             return true;
@@ -535,8 +557,16 @@ public partial class LocalView : CardGridViewBase
             || comic.Tags.Any(t => t.Contains(_keyword, StringComparison.OrdinalIgnoreCase));
     }
 
-    /// <summary>统计本地漫画标签，按出现次数降序取前 60 个。</summary>
-    private List<string> BuildTagList()
+    /// <summary>统计本地漫画标签计数（仿 Green FilterSidebar items.count）。</summary>
+    private Dictionary<string,int> BuildTagCounts()
+    {
+        return _allComics.SelectMany(c => c.Tags).Where(t => !string.IsNullOrWhiteSpace(t)).GroupBy(t => t, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+    }
+    private Dictionary<string,int> BuildAuthorCounts()
+    {
+        return _allComics.SelectMany(c => c.Author).Where(a => !string.IsNullOrWhiteSpace(a)).GroupBy(a => a, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.Count(), StringComparer.OrdinalIgnoreCase);
+    }
+    [Obsolete("Use BuildTagCounts")] private List<string> BuildTagList()
     {
         return _allComics
             .SelectMany(c => c.Tags)
@@ -611,3 +641,8 @@ public partial class LocalView : CardGridViewBase
         LocalItems.Visibility = state == State.Result ? Visibility.Visible : Visibility.Collapsed;
     }
 }
+
+
+
+
+
