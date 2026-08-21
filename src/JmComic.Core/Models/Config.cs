@@ -6,7 +6,6 @@ public class Config
 {
     [JsonPropertyName("apiDomain")] public string ApiDomain { get; set; } = "";
 
-    /// <summary>接口域名列表（优先于 apiDomain 使用）；请求失败时自动轮换到下一个可用域名。</summary>
     [JsonPropertyName("apiDomains")] public List<string> ApiDomains { get; set; } = new();
     [JsonPropertyName("username")] public string Username { get; set; } = "";
     [JsonPropertyName("password")] public string Password { get; set; } = "";
@@ -14,9 +13,9 @@ public class Config
     [JsonPropertyName("downloadFormat")] public DownloadFormat DownloadFormat { get; set; } = DownloadFormat.Jpeg;
     [JsonPropertyName("localDirs")] public List<string> LocalDirs { get; set; } = new();
     [JsonPropertyName("titleTranslate")] public TitleTranslateOptions TitleTranslate { get; set; } = new();
+    [JsonPropertyName("readerScrollSpeed")] public double ReaderScrollSpeed { get; set; } = 1.0;
 }
 
-/// <summary>标题中文名翻译配置（OpenAI 兼容 Chat Completions 接口，如 OpenAI / DeepSeek / 通义等）。</summary>
 public class TitleTranslateOptions
 {
     [JsonPropertyName("enabled")] public bool Enabled { get; set; }

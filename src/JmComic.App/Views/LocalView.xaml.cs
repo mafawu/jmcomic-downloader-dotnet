@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -142,6 +142,11 @@ public partial class LocalView : CardGridViewBase
         }
     }
 
+    public Task RequestRefreshAsync()
+    {
+        return LoadAsync(incremental: false);
+    }
+
     private void RefreshButton_Click(object sender, RoutedEventArgs e)
     {
         var result = MessageBox.Show(
@@ -153,6 +158,17 @@ public partial class LocalView : CardGridViewBase
         {
             _ = LoadAsync(incremental: false);
         }
+    }
+
+    public async Task<bool> OpenManageDirsDialogAsync(Window owner)
+    {
+        var dialog = new LocalDirsDialog { Owner = owner };
+        if (dialog.ShowDialog() == true)
+        {
+            await LoadAsync(incremental: false);
+            return true;
+        }
+        return false;
     }
 
     private async void ManageDirsButton_Click(object sender, RoutedEventArgs e)

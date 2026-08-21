@@ -1,3 +1,4 @@
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -38,12 +39,26 @@ public partial class SettingsDialog : Window
         TranslateBaseUrlBox.Text = config.TitleTranslate.BaseUrl;
         TranslateApiKeyBox.Text = config.TitleTranslate.ApiKey;
         TranslateModelBox.Text = config.TitleTranslate.Model;
+
+        ScrollSpeedSlider.Value = ConfigService.NormalizeScrollSpeed(config.ReaderScrollSpeed);
+        UpdateScrollSpeedText(ScrollSpeedSlider.Value);
     }
 
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
         DwmWindowCorner.Apply(this);
+    }
+
+    private void ScrollSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        UpdateScrollSpeedText(e.NewValue);
+    }
+
+    private void UpdateScrollSpeedText(double v)
+    {
+        if (ScrollSpeedValueText is null) return;
+        ScrollSpeedValueText.Text = $"{v:0.0}x";
     }
 
     private void BrowseDownloadDir_Click(object sender, RoutedEventArgs e)
@@ -76,13 +91,14 @@ public partial class SettingsDialog : Window
             .Split(new[] { ',', '，', ';', '；', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
-        // 归一化为 apiDomains 列表；旧字段 apiDomain 保持为空（读取时仍兼容旧配置）
         config.ApiDomain = "";
         if (FormatBox.SelectedItem is ComboBoxItem { Tag: string tag }
             && Enum.TryParse<DownloadFormat>(tag, true, out var format))
         {
             config.DownloadFormat = format;
         }
+
+        config.ReaderScrollSpeed = ConfigService.NormalizeScrollSpeed(ScrollSpeedSlider.Value);
 
         config.TitleTranslate.Enabled = TranslateEnabledBox.IsChecked == true;
         config.TitleTranslate.BaseUrl = TranslateBaseUrlBox.Text.Trim();
@@ -96,6 +112,54 @@ public partial class SettingsDialog : Window
     private void CloseButton_Click(object sender, RoutedEventArgs e) => DialogResult = false;
 
     private void CancelButton_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+
+    private void ManageLocalDirs_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new LocalDirsDialog { Owner = this };
+        if (dialog.ShowDialog() == true)
+        {
+            if (Owner is MainWindow mw)
+            {
+                _ = mw.TriggerLocalRefreshAsync();
+            }
+        }
+    }
+
+    private async void RefreshLocal_Click(object sender, RoutedEventArgs e)
+    {
+        var result = MessageBox.Show(this, "手动刷新将对全部本地目录进行全量重新扫描，目录较多时可能较慢。是否继续？", "全量重新扫描", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (result != MessageBoxResult.Yes) return;
+        try
+        {
+            if (Owner is MainWindow mw)
+            {
+                await mw.TriggerLocalRefreshAsync();
+            }
+            else
+            {
+                var localView = new Views.LocalView();
+                await localView.RequestRefreshAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError($"刷新失败：{ex.Message}");
+        }
+    }
+
+    private void ViewLogs_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var dir = JmComic.Core.AppPaths.AppDataDir;
+            Directory.CreateDirectory(dir);
+            Process.Start(new ProcessStartInfo { FileName = dir, UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            ShowError($"打开日志目录失败：{ex.Message}");
+        }
+    }
 
     private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {

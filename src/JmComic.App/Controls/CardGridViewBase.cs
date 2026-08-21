@@ -63,7 +63,9 @@ public class CardGridViewBase : UserControl
     {
         if (ActualWidth <= 0)
             return;
-        var (cardWidth, slotWidth) = GridCellSizer.ComputeByColumns(Columns, ActualWidth);
+        const double scrollbarReserve = 16;
+        var available = ActualWidth > scrollbarReserve ? ActualWidth - scrollbarReserve : ActualWidth;
+        var (cardWidth, slotWidth) = GridCellSizer.ComputeByColumns(Columns, available);
         CardWidth = cardWidth;
         SlotWidth = slotWidth;
     }

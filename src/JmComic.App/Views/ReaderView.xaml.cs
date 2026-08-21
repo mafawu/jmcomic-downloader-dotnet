@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -45,6 +45,7 @@ public partial class ReaderView : UserControl
     private int _currentPage;
     private int _pendingScrollTo = -1;
     private bool _progressRestored;
+    private bool _suppressScrollSpeedSave;
 
     private readonly DispatcherTimer _progressTimer;
     private Dictionary<string, ProgressEntry> _progress = new();
@@ -52,6 +53,18 @@ public partial class ReaderView : UserControl
     public ReaderView(LocalComic comic)
     {
         InitializeComponent();
+        _suppressScrollSpeedSave = true;
+        if (App.Services.GetService(typeof(JmComic.Core.Services.ConfigService)) is JmComic.Core.Services.ConfigService cfg)
+        {
+            ScrollSpeedSlider.Value = JmComic.Core.Services.ConfigService.NormalizeScrollSpeed(cfg.Current.ReaderScrollSpeed);
+            UpdateScrollSpeedText(ScrollSpeedSlider.Value);
+        }
+        else
+        {
+            ScrollSpeedSlider.Value = 1.0;
+            UpdateScrollSpeedText(1.0);
+        }
+        _suppressScrollSpeedSave = false;
         _comic = comic;
         TitleText.Text = string.IsNullOrEmpty(comic.NameCn) ? comic.Name : comic.NameCn;
 
@@ -222,6 +235,37 @@ public partial class ReaderView : UserControl
                 GoToPage(_currentPage + (e.Delta > 0 ? -1 : 1));
                 e.Handled = true;
             }
+            return;
+        }
+        var speed = ScrollSpeedSlider != null ? ScrollSpeedSlider.Value : 1.0;
+        if (speed <= 0) speed = 1.0;
+        var delta = e.Delta * speed * 0.6;
+        var newOffset = Scroller.VerticalOffset - delta;
+        newOffset = Math.Clamp(newOffset, 0, Scroller.ScrollableHeight);
+        Scroller.ScrollToVerticalOffset(newOffset);
+        e.Handled = true;
+    }
+
+    private void ScrollSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        UpdateScrollSpeedText(e.NewValue);
+        if (_suppressScrollSpeedSave) return;
+        try
+        {
+            if (App.Services.GetService(typeof(JmComic.Core.Services.ConfigService)) is JmComic.Core.Services.ConfigService cfg)
+            {
+                cfg.Current.ReaderScrollSpeed = JmComic.Core.Services.ConfigService.NormalizeScrollSpeed(e.NewValue);
+                cfg.Save();
+            }
+        }
+        catch { }
+    }
+
+    private void UpdateScrollSpeedText(double v)
+    {
+        if (ScrollSpeedValueText != null)
+        {
+            ScrollSpeedValueText.Text = $"{v:0.0}x";
         }
     }
 

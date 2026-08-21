@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -72,6 +72,7 @@ public partial class MainWindow : Window
     {
         Title = WindowTitle;
         InitializeComponent();
+        UpdatePanelVisibility();
 
         _session = App.Services.GetRequiredService<SessionService>();
         _sourceManager = App.Services.GetRequiredService<SourceManager>();
@@ -395,6 +396,25 @@ public partial class MainWindow : Window
         RightPanelHost.Content = DownloadPanelView;
         _panelVisible = false;
         UpdatePanelVisibility();
+    }
+
+    public async Task TriggerLocalRefreshAsync()
+    {
+        if (_localView is not null)
+        {
+            await _localView.RequestRefreshAsync();
+        }
+        else
+        {
+            _localView = new LocalView();
+            await _localView.RequestRefreshAsync();
+        }
+    }
+
+    public async Task<bool> OpenLocalDirsDialogAsync(Window owner)
+    {
+        _localView ??= new LocalView();
+        return await _localView.OpenManageDirsDialogAsync(owner);
     }
 
     /// <summary>显示本地漫画列表，并在右侧展示本地搜索工具。</summary>

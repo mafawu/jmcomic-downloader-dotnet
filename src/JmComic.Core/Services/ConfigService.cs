@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using JmComic.Core.Models;
@@ -59,6 +59,7 @@ public class ConfigService
                 config.LocalDirs = new List<string> { config.DownloadDir };
             }
             config.TitleTranslate ??= new TitleTranslateOptions();
+            config.ReaderScrollSpeed = NormalizeScrollSpeed(config.ReaderScrollSpeed);
 
             config.Password = Decrypt(config.Password);
             config.TitleTranslate.ApiKey = Decrypt(config.TitleTranslate.ApiKey);
@@ -90,6 +91,7 @@ public class ConfigService
 
     public void Save(Config config)
     {
+        config.ReaderScrollSpeed = NormalizeScrollSpeed(config.ReaderScrollSpeed);
         Directory.CreateDirectory(Path.GetDirectoryName(_configPath)!);
         var translate = config.TitleTranslate ?? new TitleTranslateOptions();
         var persisted = new Config
@@ -101,6 +103,7 @@ public class ConfigService
             DownloadDir = config.DownloadDir,
             DownloadFormat = config.DownloadFormat,
             LocalDirs = config.LocalDirs,
+            ReaderScrollSpeed = config.ReaderScrollSpeed,
             TitleTranslate = new TitleTranslateOptions
             {
                 Enabled = translate.Enabled,
@@ -110,6 +113,15 @@ public class ConfigService
             },
         };
         File.WriteAllText(_configPath, JsonSerializer.Serialize(persisted, JsonOptions));
+    }
+
+    public static double NormalizeScrollSpeed(double v)
+    {
+        if (double.IsNaN(v) || double.IsInfinity(v) || v <= 0)
+        {
+            return 1.0;
+        }
+        return Math.Clamp(v, 0.2, 5.0);
     }
 
     /// <summary>用 Windows DPAPI（当前用户作用域）加密；非 Windows 或失败时退回明文。</summary>

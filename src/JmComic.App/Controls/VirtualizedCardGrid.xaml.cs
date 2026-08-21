@@ -144,11 +144,41 @@ public partial class VirtualizedCardGrid : UserControl
     private void RebuildRows()
     {
         var items = ItemsSource?.Cast<object>().ToList() ?? new List<object>();
-        var width = ActualWidth;
+        double width;
+        const double rightPadding = 8;
+        const double scrollbarWidth = 7;
+        if (_scroller != null && _scroller.ViewportWidth > 0)
+        {
+            width = _scroller.ViewportWidth - rightPadding;
+            // 覆盖式/悬浮滚动条：Viewport 不扣除滚动条宽度（Viewport≈ActualWidth），需额外预留
+            var viewportEqualsActual = Math.Abs(_scroller.ViewportWidth - _scroller.ActualWidth) < 1.0;
+            var isOverlay = viewportEqualsActual && _scroller.ScrollableHeight > 0;
+            if (isOverlay || _scroller.ComputedVerticalScrollBarVisibility != Visibility.Visible && _scroller.ScrollableHeight > 0)
+                width -= scrollbarWidth;
+            if (width <= 0) width = _scroller.ViewportWidth - rightPadding - (isOverlay ? scrollbarWidth : 0);
+        }
+        else
+        {
+            const double fallbackReserve = 16;
+            width = ActualWidth > fallbackReserve ? ActualWidth - fallbackReserve : ActualWidth;
+        }
         int columns;
         if (DesiredColumns >= GridCellSizer.MinColumns && DesiredColumns <= GridCellSizer.MaxColumns)
         {
             columns = DesiredColumns;
+            // 本地页等固定列模式：按视口可用宽度重算卡片宽度，避免父容器 ActualWidth（含外层 Margin）与视口不一致导致遮挡
+            if (width > 0)
+            {
+                var newSlot = width / columns;
+                var newCard = newSlot - GridCellSizer.Spacing;
+                newCard = Math.Clamp(newCard, 80, 320);
+                newSlot = newCard + GridCellSizer.Spacing;
+                if (Math.Abs(newCard - CardWidth) > 0.5 || Math.Abs(newSlot - SlotWidth) > 0.5)
+                {
+                    SetCurrentValue(CardWidthProperty, newCard);
+                    SetCurrentValue(SlotWidthProperty, newSlot);
+                }
+            }
         }
         else
         {
@@ -182,7 +212,9 @@ public partial class VirtualizedCardGrid : UserControl
             {
                 VerticalOffset = e.VerticalOffset;
                 Scrolled?.Invoke(this, EventArgs.Empty);
+                if (e.ViewportWidthChange != 0 || e.ExtentWidthChange != 0) ScheduleRebuild();
             };
+            sv.SizeChanged += (_, _) => ScheduleRebuild();
         }
     }
 }

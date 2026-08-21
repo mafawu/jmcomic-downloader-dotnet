@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -61,6 +61,7 @@ public partial class OnlineReaderView : UserControl
     private double _viewHeight = 800;
     private double _zoom = 1.0;
     private bool _suppressChapterCombo;
+    private bool _suppressScrollSpeedSave;
 
     private readonly DispatcherTimer _progressTimer;
     /// <summary>滚动模式防抖：停止滚动 120ms 后才加载可视区，避免惯性滚动触发大量图片请求。</summary>
@@ -70,6 +71,23 @@ public partial class OnlineReaderView : UserControl
     public OnlineReaderView(IComicSource source, IReadOnlyList<Chapter> chapters, int startIndex)
     {
         InitializeComponent();
+        _suppressScrollSpeedSave = true;
+        try
+        {
+            if (App.Services.GetService(typeof(JmComic.Core.Services.ConfigService)) is JmComic.Core.Services.ConfigService ocfg)
+            {
+                ScrollSpeedSlider.Value = JmComic.Core.Services.ConfigService.NormalizeScrollSpeed(ocfg.Current.ReaderScrollSpeed);
+                UpdateScrollSpeedText(ScrollSpeedSlider.Value);
+            }
+            else
+            {
+                ScrollSpeedSlider.Value = 1.0;
+                UpdateScrollSpeedText(1.0);
+            }
+        }
+        catch { }
+        _suppressScrollSpeedSave = false;
+
         _service = App.Services.GetRequiredService<OnlineReaderService>();
         _source = source;
         _chapters = chapters;
@@ -581,6 +599,37 @@ public partial class OnlineReaderView : UserControl
                 ScrollToPage(_currentPage + 1);
             }
             e.Handled = true;
+            return;
+        }
+        var speed = ScrollSpeedSlider != null ? ScrollSpeedSlider.Value : 1.0;
+        if (speed <= 0) speed = 1.0;
+        var delta = e.Delta * speed * 0.6;
+        var newOffset = Scroller.VerticalOffset - delta;
+        newOffset = Math.Clamp(newOffset, 0, Scroller.ScrollableHeight);
+        Scroller.ScrollToVerticalOffset(newOffset);
+        e.Handled = true;
+    }
+
+    private void ScrollSpeedSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        UpdateScrollSpeedText(e.NewValue);
+        if (_suppressScrollSpeedSave) return;
+        try
+        {
+            if (App.Services.GetService(typeof(JmComic.Core.Services.ConfigService)) is JmComic.Core.Services.ConfigService ocfg2)
+            {
+                ocfg2.Current.ReaderScrollSpeed = JmComic.Core.Services.ConfigService.NormalizeScrollSpeed(e.NewValue);
+                ocfg2.Save();
+            }
+        }
+        catch { }
+    }
+
+    private void UpdateScrollSpeedText(double v)
+    {
+        if (ScrollSpeedValueText != null)
+        {
+            ScrollSpeedValueText.Text = $"{v:0.0}x";
         }
     }
 

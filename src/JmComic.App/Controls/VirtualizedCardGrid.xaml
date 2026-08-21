@@ -16,7 +16,8 @@
                 <ScrollViewer x:Name="Scroller"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
-                              CanContentScroll="True">
+                              CanContentScroll="True"
+                              Padding="0,0,8,0">
                     <ItemsPresenter />
                 </ScrollViewer>
             </ControlTemplate>

@@ -1,4 +1,4 @@
-<Window x:Class="JmComic.App.Dialogs.SettingsDialog"
+﻿<Window x:Class="JmComic.App.Dialogs.SettingsDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
@@ -24,6 +24,7 @@
             BorderThickness="1"
             CornerRadius="16"
             Padding="26,22">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="680">
         <StackPanel>
             <Grid>
                 <TextBlock Text="设置" FontSize="17" FontWeight="Bold" VerticalAlignment="Center" />
@@ -80,6 +81,54 @@
                            FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
             </Grid>
 
+            <TextBlock Text="阅读设置" FontSize="13" FontWeight="Bold" Margin="0,16,0,0" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="96" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="滚动速度" Grid.Row="0" VerticalAlignment="Center"
+                           FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Slider x:Name="ScrollSpeedSlider" Width="200" Minimum="0.3" Maximum="3.0"
+                            TickFrequency="0.1" IsSnapToTickEnabled="True" AutoToolTipPlacement="BottomRight"
+                            TickPlacement="BottomRight" VerticalAlignment="Center"
+                            ValueChanged="ScrollSpeedSlider_ValueChanged"/>
+                    <TextBlock x:Name="ScrollSpeedValueText" Margin="10,0,0,0" VerticalAlignment="Center"
+                               FontSize="12.5" FontWeight="Bold" MinWidth="40"/>
+                </StackPanel>
+                <TextBlock Text="仅滚动模式生效：0.3 慢 — 1.0 默认 — 3.0 快，可在阅读页即时调节" Grid.Row="1" Grid.Column="1"
+                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+            </Grid>
+
+            <TextBlock Text="本地管理" FontSize="13" FontWeight="Bold" Margin="0,16,0,0" />
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="96" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="本地路径" Grid.Row="0" VerticalAlignment="Center"
+                           FontSize="12.5" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource GhostButtonStyle}" Content="管理本地路径…"
+                            Click="ManageLocalDirs_Click" Padding="10,5" />
+                    <Button Style="{StaticResource GhostButtonStyle}" Content="刷新本地"
+                            Margin="8,0,0,0" Click="RefreshLocal_Click" Padding="10,5" />
+                    <Button Style="{StaticResource GhostButtonStyle}" Content="查看日志"
+                            Margin="8,0,0,0" Click="ViewLogs_Click" Padding="10,5" />
+                </StackPanel>
+                <TextBlock Text="管理本地漫画扫描目录、重新扫描本地库、打开日志/数据目录" Grid.Row="1" Grid.Column="1"
+                           FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+            </Grid>
+
             <TextBlock Text="标题翻译（中文名）" FontSize="13" FontWeight="Bold" Margin="0,14,0,0" />
             <CheckBox x:Name="TranslateEnabledBox"
                       Content="启用翻译（扫描时自动为缺失中文名的漫画翻译标题）"
@@ -122,5 +171,6 @@
                         Margin="10,0,0,0" Click="SaveButton_Click" />
             </StackPanel>
         </StackPanel>
+        </ScrollViewer>
     </Border>
 </Window>
