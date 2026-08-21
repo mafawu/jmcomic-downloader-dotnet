@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Text.RegularExpressions;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using JmComic.App.Common;
@@ -578,10 +579,12 @@ public partial class ReaderView : UserControl
         if (_images.Count == 0)
         {
             PageText.Text = "0 / 0";
+            if (JumpTotalText != null) JumpTotalText.Text = "0";
             return;
         }
         var index = (_pageMode ? _currentPage : FindIndexAt(Scroller.VerticalOffset)) + 1;
         PageText.Text = $"{index} / {_images.Count} · 第 {_chapterIndex + 1}/{_chapterDirs.Count} 章";
+        if (JumpTotalText != null) JumpTotalText.Text = _images.Count.ToString();
     }
 
     private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -691,6 +694,32 @@ public partial class ReaderView : UserControl
         {
             ScrollToPage(FindIndexAt(Scroller.VerticalOffset) + 1);
         }
+    }
+
+    private void PageJumpBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        e.Handled = !Regex.IsMatch(e.Text, "^[0-9]+$");
+    }
+
+    private void PageJumpBox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            DoPageJump();
+            e.Handled = true;
+        }
+    }
+
+    private void PageJump_Click(object sender, RoutedEventArgs e) => DoPageJump();
+
+    private void DoPageJump()
+    {
+        if (_images.Count == 0) return;
+        if (!int.TryParse(PageJumpBox.Text?.Trim(), out var p)) return;
+        var target = Math.Clamp(p - 1, 0, _images.Count - 1);
+        if (_pageMode) GoToPage(target); else ScrollToPage(target);
+        PageJumpBox.Text = (target + 1).ToString();
+        PageJumpBox.SelectAll();
     }
 
     private void ReaderView_PreviewKeyDown(object sender, KeyEventArgs e)
