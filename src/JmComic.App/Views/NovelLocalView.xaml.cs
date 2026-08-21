@@ -221,6 +221,9 @@ public partial class NovelLocalView : CardGridViewBase
     private void PrevPage_Click(object sender, RoutedEventArgs e){ if(_page>1){ _page--; RenderPage(); } }
     private void NextPage_Click(object sender, RoutedEventArgs e){ if(_page<_pageCount){ _page++; RenderPage(); } }
     private void ReloadButton_Click(object sender, RoutedEventArgs e){ _loaded=false; _ = LoadIndexAsync(_indexPath); }
+    public void SetSort(string tag){ if(string.IsNullOrWhiteSpace(tag)) return; _sortTag = tag; if (_all.Count>0) RebuildFilter(); }
+    public void ReloadIndex(){ _loaded=false; _ = LoadIndexAsync(_indexPath); }
+    public string CurrentSort => _sortTag;
     private void BackButton_Click(object sender, RoutedEventArgs e) => Navigation.BackHandler?.Invoke();
     public void RefreshHistory(){ try { if(_filtered.Count>0) RenderPage(); } catch{} }
     private void PickFileButton_Click(object sender, RoutedEventArgs e)

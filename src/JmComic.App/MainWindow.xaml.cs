@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -104,11 +104,13 @@ public partial class MainWindow : Window
                 _panelVisible = true;
                 UpdatePanelVisibility();
                 try { (_novelView as JmComic.App.Views.NovelLocalView)?.RefreshHistory(); } catch { }
+                UpdateTopBarForKind();
                 return;
             }
             if (PageHost.Content is NovelLocalView)
             {
                 ExitNovelMode();
+                UpdateTopBarForKind();
                 return;
             }
             if (PageHost.Content is OnlineReaderView)
@@ -149,6 +151,19 @@ public partial class MainWindow : Window
         UpdateLoginArea();
         UpdateThemeIcon();
         UpdatePanelVisibility();
+        UpdateTopBarForKind();
+        try
+        {
+            Loaded += (_, _) =>
+            {
+                if (NovelTopSlider != null) NovelTopSlider.ColumnsChanged += c => { if (_novelView != null) _novelView.Columns = c; };
+                if (NovelTopSortBox != null && _novelView != null)
+                {
+                    var tag = (NovelTopSortBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "NameAsc";
+                    _novelView.SetSort(tag);
+                }
+            };
+        } catch {}
 
         Loaded += (_, _) => ToastService.ShowHandler = (message, kind) => Snackbars.Show(message, kind);
         Closed += (_, _) => ToastService.ShowHandler = null;
@@ -174,6 +189,47 @@ public partial class MainWindow : Window
         }
     }
 
+
+    private bool IsNovelMode => PageHost != null && (PageHost.Content is NovelLocalView || PageHost.Content is NovelReaderView);
+
+    private void UpdateTopBarForKind()
+    {
+        try
+        {
+            var isNovel = IsNovelMode;
+            if (MangaTopActions != null) MangaTopActions.Visibility = (!isNovel && _currentKind == ResourceKind.Manga) ? Visibility.Visible : Visibility.Collapsed;
+            if (VideoTopActions != null) VideoTopActions.Visibility = (!isNovel && _currentKind == ResourceKind.Video) ? Visibility.Visible : Visibility.Collapsed;
+            if (NovelTopActions != null) NovelTopActions.Visibility = isNovel ? Visibility.Visible : Visibility.Collapsed;
+            if (SourceBox != null) SourceBox.Visibility = isNovel ? Visibility.Collapsed : Visibility.Visible;
+            // 小说模式隐藏登录区（本地无需登录）
+            if (LoginArea != null) LoginArea.Visibility = isNovel ? Visibility.Collapsed : Visibility.Visible;
+            if (isNovel && _novelView != null)
+            {
+                try
+                {
+                    if (NovelTopSlider != null && NovelTopSlider.Columns != _novelView.Columns) NovelTopSlider.Columns = _novelView.Columns;
+                    if (NovelTopSortBox != null)
+                    {
+                        var cur = _novelView.CurrentSort;
+                        foreach (ComboBoxItem it in NovelTopSortBox.Items) if ((it.Tag as string) == cur) { NovelTopSortBox.SelectedItem = it; break; }
+                    }
+                } catch {}
+            }
+        } catch {}
+    }
+
+    private void NovelTopSort_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is ComboBox cb && cb.SelectedItem is ComboBoxItem ci && ci.Tag is string tag)
+        {
+            _novelView?.SetSort(tag);
+        }
+    }
+
+    private void NovelTopReload_Click(object sender, RoutedEventArgs e)
+    {
+        _novelView?.ReloadIndex();
+    }
     private void KindPill_Click(object sender, RoutedEventArgs e)
     {
         if (sender is RadioButton { Tag: string tag } rb && Enum.TryParse<ResourceKind>(tag, out var kind))
@@ -181,6 +237,7 @@ public partial class MainWindow : Window
             _currentKind = kind;
             RefreshSourceBoxForKind(kind);
             UpdateNavCapabilities();
+            UpdateTopBarForKind();
             if (kind != ResourceKind.Manga)
             {
                 var name = kind == ResourceKind.Novel ? "小说" : "视频";
@@ -260,6 +317,7 @@ public partial class MainWindow : Window
             PageHost.Content = _weeklyView;
             _weeklyView.OnShown();
         }
+        UpdateTopBarForKind();
     }
 
     private void OpenComic(string sourceId, string comicId)
@@ -488,6 +546,7 @@ private void OpenNovelLocal()
             LeftNavHost.Visibility = Visibility.Collapsed;
             _panelVisible = true;
             UpdatePanelVisibility();
+            UpdateTopBarForKind();
         }
         catch (Exception ex)
         {
@@ -503,6 +562,7 @@ private void OpenNovelLocal()
         PageHost.Content = _searchView;
         _lastPage = _searchView;
         NavSearch.IsChecked = true;
+        UpdateTopBarForKind();
     }
 
     private void OpenNovelReader(string path)
@@ -515,6 +575,7 @@ private void OpenNovelLocal()
         _lastPage = PageHost.Content as UserControl;
         PageHost.Content = _novelReaderView;
         RightPanelHost.Visibility = Visibility.Collapsed;
+        UpdateTopBarForKind();
     }
 
     private void NovelLocalButton_Click(object sender, RoutedEventArgs e) => OpenNovelLocal();

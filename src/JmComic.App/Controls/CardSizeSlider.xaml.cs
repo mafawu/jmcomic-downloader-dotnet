@@ -37,6 +37,7 @@ public partial class CardSizeSlider : UserControl
     }
 
     private bool _syncing;
+    public event Action<int>? ColumnsChanged;
 
     public CardSizeSlider()
     {
@@ -52,6 +53,7 @@ public partial class CardSizeSlider : UserControl
         if (ScaleText is not null)
             ScaleText.Text = $"每行 {Columns} 个";
         _syncing = false;
+        try { ColumnsChanged?.Invoke(Columns); } catch {}
     }
 
     private void ScaleSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
