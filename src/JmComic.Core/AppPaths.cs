@@ -1,4 +1,4 @@
-namespace JmComic.Core;
+﻿namespace JmComic.Core;
 
 public static class AppPaths
 {
@@ -13,6 +13,8 @@ public static class AppPaths
     public static string NovelHistoryPath => Path.Combine(AppDataDir, "novel-history.json");
     public static string NovelIndexPath => Path.Combine(AppDataDir, "novel-index.json");
     public static string NovelReaderSettingsPath => Path.Combine(AppDataDir, "novel-reader-settings.json");
+    public static string ComicUserDataPath => Path.Combine(AppDataDir, "comic-user-data.json");
+    public static string VideoFoldersPath => Path.Combine(AppDataDir, "video-folders.json");
     public static void MigrateLegacyData()
     {
         try

@@ -10,6 +10,7 @@ using System.Windows.Threading;
 using JmComic.App.Common;
 using JmComic.Core;
 using JmComic.Core.Models;
+using JmComic.Core.Services;
 using JmComic.Core.Utils;
 
 namespace JmComic.App.Views;

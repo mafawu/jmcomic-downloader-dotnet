@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace JmComic.Core.Models;
 
@@ -47,6 +47,39 @@ public class LocalComic
     /// <summary>元数据文件（album.json / 元数据.json）最后修改时间，用于增量扫描判断元数据是否变化。</summary>
     public DateTime? MetadataStamp { get; init; }
     public bool HasMetadata { get; init; }
+    // ====================== 用户数据（阅读进度 / 评分 / 备注）======================
+
+    /// <summary>已读图片数（跨章节累计），由阅读器在保存进度时更新。</summary>
+    [JsonPropertyName("readImageCount")]
+    public int ReadImageCount { get; set; }
+
+    /// <summary>总图片数（所有章节图片之和），用于计算阅读进度百分比。</summary>
+    [JsonPropertyName("totalImageCount")]
+    public int TotalImageCount { get; set; }
+
+    /// <summary>阅读进度百分比 0-100。</summary>
+    [JsonPropertyName("readProgress")]
+    public double ReadProgress => TotalImageCount > 0 ? Math.Clamp(100.0 * ReadImageCount / TotalImageCount, 0, 100) : 0;
+
+    /// <summary>首次阅读时间（ISO 8601）。</summary>
+    [JsonPropertyName("firstReadAt")]
+    public string? FirstReadAt { get; set; }
+
+    /// <summary>最后阅读时间（ISO 8601）。</summary>
+    [JsonPropertyName("lastReadAt")]
+    public string? LastReadAt { get; set; }
+
+    /// <summary>阅读次数（每次打开阅读器 +1）。</summary>
+    [JsonPropertyName("readCount")]
+    public int ReadCount { get; set; }
+
+    /// <summary>用户评分（1-5 星，0 表示未评分）。</summary>
+    [JsonPropertyName("rating")]
+    public int Rating { get; set; }
+
+    /// <summary>用户备注。</summary>
+    [JsonPropertyName("notes")]
+    public string Notes { get; set; } = "";
 }
 
 /// <summary>本地漫画库磁盘缓存：按根目录分组保存扫描结果，供增量扫描复用。</summary>

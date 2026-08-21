@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Windows;
 using JmComic.App.Services;
 using JmComic.App.Themes;
@@ -80,6 +80,8 @@ public partial class App : Application
         services.AddSingleton<NovelReadingHistoryService>();
         services.AddSingleton<NovelReaderSettingsService>();
         services.AddSingleton<AlbumUpdateService>();
+        services.AddSingleton<ComicUserDataService>(sp => new ComicUserDataService(AppPaths.ComicUserDataPath));
+        services.AddSingleton<VideoLibraryService>(sp => new VideoLibraryService(AppPaths.VideoFoldersPath));
         services.AddSingleton<DownloadPanelViewModel>();
         Services = services.BuildServiceProvider();
 

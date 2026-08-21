@@ -72,10 +72,8 @@
                     <Border Style="{StaticResource KindPillGroupStyle}" Margin="16,0,0,0" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
                             <RadioButton x:Name="KindMangaPill" Content="漫画" IsChecked="True" Style="{StaticResource KindPillRadioStyle}" Tag="Manga" GroupName="KindGroup" Click="KindPill_Click"/>
-                            <RadioButton x:Name="KindVideoPill" Content="视频" Style="{StaticResource KindPillRadioStyle}" Tag="Video" GroupName="KindGroup" Click="KindPill_Click"/>
-                    <Button x:Name="NovelLocalButton" Style="{StaticResource GhostButtonStyle}" Margin="8,0,0,0" Padding="10,6" VerticalAlignment="Center" shell:WindowChrome.IsHitTestVisibleInChrome="True" Click="NovelLocalButton_Click" ToolTip="打开本地小说库（独立页面）">
-                        <StackPanel Orientation="Horizontal"><Border Background="#7C6CF6" CornerRadius="6" Padding="6,2" VerticalAlignment="Center"><TextBlock Text="小" FontSize="10" Foreground="White" FontWeight="Bold"/></Border><TextBlock Text="本地小说" Margin="6,0,0,0" VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold"/></StackPanel>
-                    </Button>
+                            <RadioButton x:Name="KindVideoPill" Content="视频" Style="{StaticResource KindPillRadioStyle}" Tag="Video" GroupName="KindGroup" Margin="2,0,0,0" Click="KindPill_Click"/>
+                            <RadioButton x:Name="KindNovelPill" Content="本地小说" Style="{StaticResource KindPillRadioStyle}" Tag="Novel" GroupName="KindGroup" Margin="2,0,0,0" Click="KindPill_Click"/>
                         </StackPanel>
                     </Border>
                     <ComboBox x:Name="SourceBox" Width="132" Margin="8,0,0,0"

@@ -37,6 +37,10 @@ public partial class MainWindow : Window
     private UserControl? _localTabContent;
     private WeeklyView? _weeklyView;
     private NovelLocalView? _novelView;
+    private VideoView? _videoView;
+    private UserControl? _lastMangaContent;
+    private UserControl? _lastNovelContent;
+    private UserControl? _lastVideoContent;
     private NovelSearchPanel? _novelSearchPanel;
     private NovelReaderView? _novelReaderView;
 
@@ -191,6 +195,7 @@ public partial class MainWindow : Window
 
 
     private bool IsNovelMode => PageHost != null && (PageHost.Content is NovelLocalView || PageHost.Content is NovelReaderView);
+    private bool IsVideoMode => PageHost != null && PageHost.Content is VideoView;
 
     private void UpdateTopBarForKind()
     {
@@ -234,9 +239,19 @@ public partial class MainWindow : Window
     {
         if (sender is RadioButton { Tag: string tag } rb && Enum.TryParse<ResourceKind>(tag, out var kind))
         {
+            if (PageHost?.Content is UserControl leaving)
+            {
+                if (IsNovelMode) _lastNovelContent = leaving;
+                else if (IsVideoMode) _lastVideoContent = leaving;
+                else _lastMangaContent = leaving;
+            }
             _currentKind = kind;
             RefreshSourceBoxForKind(kind);
             UpdateNavCapabilities();
+            if (IsNovelMode && kind == ResourceKind.Manga) { ExitNovelMode(); return; }
+            if (IsVideoMode && kind == ResourceKind.Manga) { ExitVideoMode(); return; }
+            if (kind == ResourceKind.Novel && !IsNovelMode) { OpenNovelLocal(); return; }
+            if (kind == ResourceKind.Video && !IsVideoMode) { OpenVideoView(); return; }
             UpdateTopBarForKind();
             if (kind != ResourceKind.Manga)
             {
@@ -245,6 +260,7 @@ public partial class MainWindow : Window
             }
         }
     }
+
 
     // ====================== 导航 ======================
 
@@ -536,6 +552,16 @@ private void OpenNovelLocal()
     {
         try
         {
+            if (_lastNovelContent is NovelReaderView)
+            {
+                PageHost.Content = _lastNovelContent;
+                RightPanelHost.Visibility = Visibility.Collapsed;
+                LeftNavHost.Visibility = Visibility.Collapsed;
+                _panelVisible = false;
+                UpdatePanelVisibility();
+                UpdateTopBarForKind();
+                return;
+            }
             _novelView ??= new NovelLocalView();
             if (_novelSearchPanel == null) _novelSearchPanel = new NovelSearchPanel();
             _novelView.SetSearchPanel(_novelSearchPanel);
@@ -555,14 +581,56 @@ private void OpenNovelLocal()
         }
     }
 
-    private void ExitNovelMode()
+    private void OpenVideoView()
+    {
+        try
+        {
+            _videoView ??= new VideoView();
+            _lastPage = _videoView;
+            PageHost.Content = _videoView;
+            RightPanelHost.Visibility = Visibility.Collapsed;
+            LeftNavHost.Visibility = Visibility.Collapsed;
+            _panelVisible = false;
+            UpdatePanelVisibility();
+            UpdateTopBarForKind();
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show("打开视频页失败：" + ex.Message, "错误");
+        }
+    }
+
+    private void ExitVideoMode()
+    {
+        KindMangaPill.IsChecked = true;
+        RestoreMangaContent();
+    }
+
+    /// <summary>恢复上次离开时的漫画页面（搜索/本地列表/阅读器等），保持状态不丢失。</summary>
+    private void RestoreMangaContent()
     {
         LeftNavHost.Visibility = Visibility.Visible;
-        HideRightPanel();
-        PageHost.Content = _searchView;
-        _lastPage = _searchView;
-        NavSearch.IsChecked = true;
+        var content = _lastMangaContent;
+        if (content is ReaderView)
+        {
+            RightPanelHost.Content = DetailPanelView;
+            _panelVisible = true;
+        }
+        else
+        {
+            HideRightPanel();
+            content ??= _searchView;
+        }
+        PageHost.Content = content;
+        _lastPage = content;
+        UpdatePanelVisibility();
         UpdateTopBarForKind();
+    }
+
+    private void ExitNovelMode()
+    {
+        KindMangaPill.IsChecked = true;
+        RestoreMangaContent();
     }
 
     private void OpenNovelReader(string path)
@@ -578,7 +646,9 @@ private void OpenNovelLocal()
         UpdateTopBarForKind();
     }
 
-    private void NovelLocalButton_Click(object sender, RoutedEventArgs e) => OpenNovelLocal();
+
+
+    private void NovelBackButton_Click(object sender, RoutedEventArgs e) => ExitNovelMode();
 
     private void ShowLocalList()
     {

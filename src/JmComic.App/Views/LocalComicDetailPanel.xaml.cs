@@ -1,4 +1,4 @@
-using System.Windows;
+﻿﻿using System.Windows;
 using System.Windows.Controls;
 using JmComic.App.Common;
 using JmComic.App.Services;
@@ -6,6 +6,7 @@ using JmComic.Core.Downloading;
 using JmComic.Core.Http;
 using JmComic.Core.Models;
 using JmComic.Core.Services;
+using JmComic.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JmComic.App.Views;
@@ -21,6 +22,7 @@ public partial class LocalComicDetailPanel : UserControl
 
     private LocalComic? _comic;
     private AlbumUpdateResult? _lastResult;
+    private ComicUserDataService? _userData;
     private CancellationTokenSource? _checkCts;
     private bool _checking;
 
@@ -29,6 +31,7 @@ public partial class LocalComicDetailPanel : UserControl
         InitializeComponent();
         _downloadManager = App.Services.GetRequiredService<DownloadManager>();
         _updateService = App.Services.GetRequiredService<AlbumUpdateService>();
+        _userData = App.Services.GetService(typeof(ComicUserDataService)) as ComicUserDataService;
     }
 
     public void Show(LocalComic comic)
@@ -66,6 +69,47 @@ public partial class LocalComicDetailPanel : UserControl
             CheckUpdateButton.IsEnabled = false;
             UpdateStatusText.Text = "该漫画缺少专辑 ID，无法检查更新";
         }
+    }
+
+    private void LoadUserRating(LocalComic comic)
+    {
+        var data = _userData?.Get(comic.Path);
+        var rating = data?.Rating ?? 0;
+        UpdateRatingStars(rating);
+        NotesBox.Text = data?.Notes ?? "";
+        SaveHintText.Text = "";
+    }
+
+    private void UpdateRatingStars(int rating)
+    {
+        for (var i = 1; i <= 5; i++)
+        {
+            var star = (Button?)FindName($"Star{i}");
+            if (star is not null) star.Foreground = i <= rating ? System.Windows.Media.Brushes.Gold : System.Windows.Media.Brushes.Gray;
+        }
+    }
+
+    private void Rating_Click(object sender, RoutedEventArgs e)
+    {
+        if (_comic is null || sender is not Button { Tag: string tag } || !int.TryParse(tag, out var stars)) return;
+        _userData?.SetRating(_comic.Path, stars);
+        UpdateRatingStars(stars);
+        SaveHintText.Text = "已保存";
+    }
+
+    private void ClearRating_Click(object sender, RoutedEventArgs e)
+    {
+        if (_comic is null) return;
+        _userData?.SetRating(_comic.Path, 0);
+        UpdateRatingStars(0);
+        SaveHintText.Text = "已清除";
+    }
+
+    private void NotesBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (_comic is null) return;
+        _userData?.SetNotes(_comic.Path, NotesBox.Text ?? "");
+        SaveHintText.Text = "备注已保存";
     }
 
     private async void CheckUpdateButton_Click(object sender, RoutedEventArgs e)

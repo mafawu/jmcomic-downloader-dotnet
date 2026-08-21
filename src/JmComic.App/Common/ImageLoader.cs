@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Net.Http;
@@ -86,6 +86,13 @@ public static class ImageLoader
         if (string.IsNullOrWhiteSpace(value))
         {
             image.Source = null;
+            return;
+        }
+
+        // 本地文件且缓存命中时同步设置，避免先清空再异步导致的闪烁
+        if (File.Exists(value) && LocalCache.TryGetValue(value, out var cachedBitmap))
+        {
+            image.Source = cachedBitmap;
             return;
         }
 

@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using JmComic.Core.Models;
@@ -32,7 +32,12 @@ public class LocalComicViewModel : INotifyPropertyChanged
     public bool ShowFileError => !HasMetadata;
     public bool ShowArchiveIcon => false;
 
-    public double Progress => ChapterCount > 0 ? Math.Clamp((ImageCount > 0 ? 100.0 * Math.Min(1.0, ChapterCount / 50.0) : 0), 0, 100) : 0;
+    public double Progress => Source?.ReadProgress ?? 0;
+    public int Rating => Source?.Rating ?? 0;
+    public bool HasRating => Rating > 0;
+    public string RatingText => HasRating ? new string('★', Rating) + new string('☆', 5 - Rating) : "";
+    public string ReadInfo => Source?.ReadCount > 0 ? $"读过 {Source.ReadCount} 次" : "";
+    public bool HasReadInfo => !string.IsNullOrEmpty(ReadInfo);
     public string ProgressText => ImageCount > 0 ? $"{ImageCount}P" : $"{ChapterCount}章";
 
     public event PropertyChangedEventHandler? PropertyChanged;
